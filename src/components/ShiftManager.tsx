@@ -14,8 +14,9 @@ import {
   Sparkles,
   Users,
   UtensilsCrossed,
+  CalendarIcon,
 } from 'lucide-react';
-import { format, formatDistanceStrict, startOfWeek, isWithinInterval } from 'date-fns';
+import { format, formatDistanceStrict, startOfWeek, isWithinInterval, setHours, setMinutes } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -59,6 +60,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 
 const initialTasks: Omit<Task, 'completed'>[] = [
@@ -99,6 +104,8 @@ export function ShiftManager() {
   const [viewingSummary, setViewingSummary] = useState(false);
   const [editingShift, setEditingShift] = useState<CompletedShift | null>(null);
   const [editedNotes, setEditedNotes] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [startTime, setStartTime] = useState(format(new Date(), 'HH:mm'));
   
   useEffect(() => {
     try {
@@ -131,12 +138,15 @@ export function ShiftManager() {
   }, [isShiftActive, shiftStartTime]);
 
   const handleStartShift = () => {
-    if (!selectedClientId) return;
+    if (!selectedClientId || !selectedDate || !startTime) return;
     const client = clients.find(c => c.id === selectedClientId);
     if (!client) return;
 
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const startDateTime = setMinutes(setHours(selectedDate, hours), minutes);
+
     setIsShiftActive(true);
-    setShiftStartTime(new Date());
+    setShiftStartTime(startDateTime);
     setShiftEndTime(null);
     setActiveShiftClient(client);
     setTasks(initialTasks.map((task) => ({ ...task, completed: false })));
@@ -172,6 +182,8 @@ export function ShiftManager() {
     setActiveShiftClient(null);
     setIsShiftActive(false);
     setViewingSummary(false);
+    setSelectedDate(new Date());
+    setStartTime(format(new Date(), 'HH:mm'));
   };
   
   const handleToggleTask = (id: number) => {
@@ -294,13 +306,13 @@ export function ShiftManager() {
             {isShiftActive && <Badge variant="secondary" className="flex items-center gap-2"><Clock className="h-4 w-4" />{elapsedTime}</Badge>}
           </div>
            <CardDescription>
-            {isShiftActive && shiftStartTime ? `Shift for ${activeShiftClient?.name} started at ${format(shiftStartTime, 'p')}` : 'Select a client and start a new shift.'}
+            {isShiftActive && shiftStartTime ? `Shift for ${activeShiftClient?.name} started at ${format(shiftStartTime, 'p')}` : 'Select a client, date, and time to start a new shift.'}
            </CardDescription>
         </CardHeader>
         <CardContent>
           {!isShiftActive ? (
             <div className="grid gap-4">
-              <div className="grid gap-2">
+               <div className="grid gap-2">
                 <Label htmlFor="client-select">Client</Label>
                 <Select onValueChange={setSelectedClientId} value={selectedClientId ?? undefined}>
                   <SelectTrigger id="client-select">
@@ -315,6 +327,42 @@ export function ShiftManager() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !selectedDate && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            initialFocus
+                        />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="start-time">Start Time</Label>
+                    <Input
+                        id="start-time"
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                    />
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-center text-muted-foreground">
@@ -326,7 +374,7 @@ export function ShiftManager() {
             {isShiftActive ? (
               <Button onClick={handleEndShift} variant="destructive" className="w-full md:w-auto">End Shift</Button>
             ) : (
-              <Button onClick={handleStartShift} className="w-full md:w-auto" disabled={!selectedClientId}>Start Shift</Button>
+              <Button onClick={handleStartShift} className="w-full md:w-auto" disabled={!selectedClientId || !selectedDate || !startTime}>Start Shift</Button>
             )}
         </CardFooter>
       </Card>
