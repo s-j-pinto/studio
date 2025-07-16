@@ -99,8 +99,7 @@ export function ShiftManager() {
   const [viewingSummary, setViewingSummary] = useState(false);
   const [editingShift, setEditingShift] = useState<CompletedShift | null>(null);
   const [editedNotes, setEditedNotes] = useState('');
-  const [filterClientId, setFilterClientId] = useState<string | null>(null);
-
+  
   useEffect(() => {
     try {
         const storedShifts = localStorage.getItem('completedShifts');
@@ -198,23 +197,27 @@ export function ShiftManager() {
     setEditedNotes('');
   };
 
-  const getWeeklyShifts = () => {
+  const getWeeklyShiftsByClient = () => {
     const today = new Date();
     const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
 
-    const allWeeklyShifts = completedShifts.filter(shift => 
+    const weeklyShifts = completedShifts.filter(shift => 
         isWithinInterval(new Date(shift.startTime), { start: weekStart, end: weekEnd })
     ).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
 
-    if (filterClientId === 'all' || !filterClientId) {
-        return allWeeklyShifts;
-    }
-    return allWeeklyShifts.filter(shift => shift.client.id === filterClientId);
+    return weeklyShifts.reduce((acc, shift) => {
+        const clientName = shift.client.name;
+        if (!acc[clientName]) {
+            acc[clientName] = [];
+        }
+        acc[clientName].push(shift);
+        return acc;
+    }, {} as Record<string, CompletedShift[]>);
   };
-
-  const weeklyShifts = getWeeklyShifts();
+  
+  const weeklyShiftsByClient = getWeeklyShiftsByClient();
 
   if (viewingSummary && shiftStartTime && shiftEndTime) {
     const completedTasks = tasks.filter((task) => task.completed);
@@ -362,85 +365,69 @@ export function ShiftManager() {
       {!isShiftActive && (
         <Card>
             <CardHeader>
-                <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                    <div>
-                        <CardTitle>Weekly Shift History</CardTitle>
-                        <CardDescription>A summary of all shifts recorded this week.</CardDescription>
-                    </div>
-                     <div className="w-full md:w-64">
-                         <Select onValueChange={setFilterClientId} defaultValue="all">
-                            <SelectTrigger id="history-client-select">
-                                <SelectValue placeholder="Select a client" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Clients</SelectItem>
-                                {clients.map((client) => (
-                                <SelectItem key={client.id} value={client.id}>
-                                    {client.name}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
+              <CardTitle>Weekly Shift History</CardTitle>
+              <CardDescription>A summary of all shifts recorded this week, grouped by client.</CardDescription>
             </CardHeader>
-            <CardContent>
-                {weeklyShifts.length > 0 ? (
-                    <TooltipProvider>
-                      <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[180px]">Client</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Duration</TableHead>
-                                {initialTasks.map(task => (
-                                    <TableHead key={task.id} className="text-center">
-                                         <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <task.icon className="h-5 w-5 mx-auto" />
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{task.text}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TableHead>
-                                ))}
-                                <TableHead className="w-[100px] text-center">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {weeklyShifts.map(shift => (
-                                <TableRow key={shift.id}>
-                                    <TableCell className="font-medium">{shift.client.name}</TableCell>
-                                    <TableCell>{format(new Date(shift.startTime), 'eee, PP')}</TableCell>
-                                    <TableCell>{formatDistanceStrict(new Date(shift.endTime), new Date(shift.startTime))}</TableCell>
-                                    {initialTasks.map(task => {
-                                        const isCompleted = shift.completedTasks.some(ct => ct.id === task.id);
-                                        return (
-                                            <TableCell key={task.id} className="text-center">
-                                                {isCompleted ? <Check className="h-5 w-5 mx-auto text-green-500" /> : <Circle className="h-5 w-5 mx-auto text-muted-foreground/50" />}
-                                            </TableCell>
-                                        )
-                                    })}
-                                    <TableCell className="text-center">
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" onClick={() => handleOpenEditDialog(shift)}>
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>Edit Notes</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </TooltipProvider>
+            <CardContent className="space-y-8">
+                {Object.keys(weeklyShiftsByClient).length > 0 ? (
+                    Object.entries(weeklyShiftsByClient).map(([clientName, shifts]) => (
+                        <div key={clientName}>
+                            <h3 className="text-lg font-semibold mb-4">{clientName}</h3>
+                             <TooltipProvider>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Duration</TableHead>
+                                            {initialTasks.map(task => (
+                                                <TableHead key={task.id} className="text-center">
+                                                     <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <task.icon className="h-5 w-5 mx-auto" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>{task.text}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TableHead>
+                                            ))}
+                                            <TableHead className="w-[100px] text-center">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {shifts.map(shift => (
+                                            <TableRow key={shift.id}>
+                                                <TableCell>{format(new Date(shift.startTime), 'eee, PP')}</TableCell>
+                                                <TableCell>{formatDistanceStrict(new Date(shift.endTime), new Date(shift.startTime))}</TableCell>
+                                                {initialTasks.map(task => {
+                                                    const isCompleted = shift.completedTasks.some(ct => ct.id === task.id);
+                                                    return (
+                                                        <TableCell key={task.id} className="text-center">
+                                                            {isCompleted ? <Check className="h-5 w-5 mx-auto text-green-500" /> : <Circle className="h-5 w-5 mx-auto text-muted-foreground/50" />}
+                                                        </TableCell>
+                                                    )
+                                                })}
+                                                <TableCell className="text-center">
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="icon" onClick={() => handleOpenEditDialog(shift)}>
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Edit Notes</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                             </TooltipProvider>
+                        </div>
+                    ))
                 ) : (
-                    <p className="text-muted-foreground text-center">No shifts recorded for the selected client this week.</p>
+                    <p className="text-muted-foreground text-center">No shifts recorded this week.</p>
                 )}
             </CardContent>
         </Card>
