@@ -26,6 +26,14 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Task } from '@/components/TaskItem';
 import { TaskItem } from '@/components/TaskItem';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const initialTasks: Omit<Task, 'completed'>[] = [
   { id: 1, text: 'Medication Reminder', icon: Pill },
@@ -36,6 +44,12 @@ const initialTasks: Omit<Task, 'completed'>[] = [
   { id: 6, text: 'Mobility Assistance', icon: Accessibility },
 ];
 
+const clients = [
+    { id: '1', name: 'Eleanor Vance' },
+    { id: '2', name: 'Arthur Pendelton' },
+    { id: '3', name: 'Beatrice Miller' },
+];
+
 export function ShiftManager() {
   const [isShiftActive, setIsShiftActive] = useState(false);
   const [shiftStartTime, setShiftStartTime] = useState<Date | null>(null);
@@ -43,6 +57,8 @@ export function ShiftManager() {
   const [elapsedTime, setElapsedTime] = useState('00:00:00');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [notes, setNotes] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [activeShiftClient, setActiveShiftClient] = useState<{ id: string; name: string; } | null>(null);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -60,9 +76,14 @@ export function ShiftManager() {
   }, [isShiftActive, shiftStartTime]);
 
   const handleStartShift = () => {
+    if (!selectedClientId) return;
+    const client = clients.find(c => c.id === selectedClientId);
+    if (!client) return;
+
     setIsShiftActive(true);
     setShiftStartTime(new Date());
     setShiftEndTime(null);
+    setActiveShiftClient(client);
     setTasks(initialTasks.map((task) => ({ ...task, completed: false })));
     setNotes('');
   };
@@ -76,8 +97,8 @@ export function ShiftManager() {
     setShiftStartTime(null);
     setShiftEndTime(null);
     setElapsedTime('00:00:00');
-    // We can call start shift directly, or just reset state to show the initial screen
-    // For now, let's reset to the initial screen
+    setSelectedClientId(null);
+    setActiveShiftClient(null);
     setIsShiftActive(false);
   };
   
@@ -98,7 +119,7 @@ export function ShiftManager() {
         <CardHeader>
           <CardTitle className="text-2xl">Shift Summary</CardTitle>
           <CardDescription>
-            Report for shift on {format(shiftStartTime, 'PPP')}
+            Report for {activeShiftClient?.name} on {format(shiftStartTime, 'PPP')}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
@@ -162,19 +183,39 @@ export function ShiftManager() {
             {isShiftActive && <Badge variant="secondary" className="flex items-center gap-2"><Clock className="h-4 w-4" />{elapsedTime}</Badge>}
           </div>
            <CardDescription>
-            {isShiftActive && shiftStartTime ? `Shift started at ${format(shiftStartTime, 'p')}` : 'Start a new shift to begin tracking tasks.'}
+            {isShiftActive && shiftStartTime ? `Shift for ${activeShiftClient?.name} started at ${format(shiftStartTime, 'p')}` : 'Select a client and start a new shift.'}
            </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-muted-foreground">
-            {isShiftActive ? 'Shift is currently active.' : 'No active shift.'}
-          </div>
+          {!isShiftActive ? (
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="client-select">Client</Label>
+                <Select onValueChange={setSelectedClientId} value={selectedClientId ?? undefined}>
+                  <SelectTrigger id="client-select">
+                    <SelectValue placeholder="Select a client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted-foreground">
+              Shift is currently active.
+            </div>
+          )}
         </CardContent>
         <CardFooter>
             {isShiftActive ? (
               <Button onClick={handleEndShift} variant="destructive" className="w-full md:w-auto">End Shift</Button>
             ) : (
-              <Button onClick={handleStartShift} className="w-full md:w-auto">Start Shift</Button>
+              <Button onClick={handleStartShift} className="w-full md:w-auto" disabled={!selectedClientId}>Start Shift</Button>
             )}
         </CardFooter>
       </Card>
