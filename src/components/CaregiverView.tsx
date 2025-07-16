@@ -4,11 +4,9 @@
 import { useState, useEffect } from 'react';
 import {
   Accessibility,
-  Check,
   CheckCircle2,
   Circle,
   Clock,
-  Edit,
   Pill,
   ShowerHead,
   Sparkles,
@@ -16,7 +14,7 @@ import {
   UtensilsCrossed,
   CalendarIcon,
 } from 'lucide-react';
-import { format, formatDistanceStrict, startOfWeek, isWithinInterval, setHours, setMinutes } from 'date-fns';
+import { format, formatDistanceStrict, setHours, setMinutes } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -38,35 +36,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 
-
-export const initialTasks: Omit<Task, 'completed'>[] = [
+const initialTasks: Omit<Task, 'completed'>[] = [
   { id: 1, text: 'Medication Reminder', icon: Pill },
   { id: 2, text: 'Meal Preparation', icon: UtensilsCrossed },
   { id: 3, text: 'Personal Care', icon: ShowerHead },
@@ -75,14 +50,17 @@ export const initialTasks: Omit<Task, 'completed'>[] = [
   { id: 6, text: 'Mobility Assistance', icon: Accessibility },
 ];
 
-export const clients = [
+const clients = [
     { id: '1', name: 'Eleanor Vance' },
     { id: '2', name: 'Arthur Pendelton' },
     { id: '3', name: 'Beatrice Miller' },
 ];
 
+interface CaregiverViewProps {
+  onShiftComplete: (shift: CompletedShift) => void;
+}
 
-export function ShiftManager() {
+export function CaregiverView({ onShiftComplete }: CaregiverViewProps) {
   const [isShiftActive, setIsShiftActive] = useState(false);
   const [shiftStartTime, setShiftStartTime] = useState<Date | null>(null);
   const [shiftEndTime, setShiftEndTime] = useState<Date | null>(null);
@@ -91,27 +69,9 @@ export function ShiftManager() {
   const [notes, setNotes] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [activeShiftClient, setActiveShiftClient] = useState<{ id: string; name: string; } | null>(null);
-  const [completedShifts, setCompletedShifts] = useState<CompletedShift[]>([]);
   const [viewingSummary, setViewingSummary] = useState(false);
-  const [editingShift, setEditingShift] = useState<CompletedShift | null>(null);
-  const [editedNotes, setEditedNotes] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [startTime, setStartTime] = useState(format(new Date(), 'HH:mm'));
-  
-  useEffect(() => {
-    try {
-        const storedShifts = localStorage.getItem('completedShifts');
-        if (storedShifts) {
-            setCompletedShifts(JSON.parse(storedShifts));
-        }
-    } catch (error) {
-        console.error("Failed to parse shifts from localStorage", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('completedShifts', JSON.stringify(completedShifts));
-  }, [completedShifts]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -160,7 +120,7 @@ export function ShiftManager() {
             incompleteTasks: tasks.filter(t => !t.completed),
             notes,
         };
-        setCompletedShifts(prev => [...prev, newShift]);
+        onShiftComplete(newShift);
     }
     setViewingSummary(true);
   };
@@ -184,43 +144,6 @@ export function ShiftManager() {
       )
     );
   };
-
-  const handleOpenEditDialog = (shift: CompletedShift) => {
-    setEditingShift(shift);
-    setEditedNotes(shift.notes);
-  };
-
-  const handleSaveNotes = () => {
-    if (!editingShift) return;
-    const updatedShifts = completedShifts.map(s => 
-      s.id === editingShift.id ? { ...s, notes: editedNotes } : s
-    );
-    setCompletedShifts(updatedShifts);
-    setEditingShift(null);
-    setEditedNotes('');
-  };
-
-  const getWeeklyShiftsByClient = () => {
-    const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-
-    const weeklyShifts = completedShifts.filter(shift => 
-        isWithinInterval(new Date(shift.startTime), { start: weekStart, end: weekEnd })
-    ).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-
-    return weeklyShifts.reduce((acc, shift) => {
-        const clientName = shift.client.name;
-        if (!acc[clientName]) {
-            acc[clientName] = [];
-        }
-        acc[clientName].push(shift);
-        return acc;
-    }, {} as Record<string, CompletedShift[]>);
-  };
-  
-  const weeklyShiftsByClient = getWeeklyShiftsByClient();
 
   if (viewingSummary && shiftStartTime && shiftEndTime) {
     const completedTasks = tasks.filter((task) => task.completed);
@@ -400,94 +323,6 @@ export function ShiftManager() {
           </Card>
         </>
       )}
-
-      {!isShiftActive && (
-        <Card>
-            <CardHeader>
-              <CardTitle>Weekly Shift History</CardTitle>
-              <CardDescription>A summary of all shifts recorded this week, grouped by client.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-8">
-                {Object.keys(weeklyShiftsByClient).length > 0 ? (
-                    Object.entries(weeklyShiftsByClient).map(([clientName, shifts]) => (
-                        <div key={clientName}>
-                            <h3 className="text-lg font-semibold mb-4">{clientName}</h3>
-                             <TooltipProvider>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Duration</TableHead>
-                                            {initialTasks.map(task => (
-                                                <TableHead key={task.id} className="text-center">
-                                                     {task.text}
-                                                </TableHead>
-                                            ))}
-                                            <TableHead className="w-[100px] text-center">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {shifts.map(shift => (
-                                            <TableRow key={shift.id}>
-                                                <TableCell>{format(new Date(shift.startTime), 'eee, PP')}</TableCell>
-                                                <TableCell>{formatDistanceStrict(new Date(shift.endTime), new Date(shift.startTime))}</TableCell>
-                                                {initialTasks.map(task => {
-                                                    const isCompleted = shift.completedTasks.some(ct => ct.id === task.id);
-                                                    return (
-                                                        <TableCell key={task.id} className="text-center">
-                                                            {isCompleted ? <Check className="h-5 w-5 mx-auto text-green-500" /> : <Circle className="h-5 w-5 mx-auto text-muted-foreground/50" />}
-                                                        </TableCell>
-                                                    )
-                                                })}
-                                                <TableCell className="text-center">
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="icon" onClick={() => handleOpenEditDialog(shift)}>
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>Edit Notes</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                             </TooltipProvider>
-                        </div>
-                    ))
-                ) : (
-                    <p className="text-muted-foreground text-center">No shifts recorded this week.</p>
-                )}
-            </CardContent>
-        </Card>
-      )}
-
-      <Dialog open={!!editingShift} onOpenChange={(isOpen) => !isOpen && setEditingShift(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Shift Notes</DialogTitle>
-            <DialogDescription>
-              Update the notes for the shift with {editingShift?.client.name} on {editingShift && format(new Date(editingShift.startTime), 'PP')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Textarea
-              value={editedNotes}
-              onChange={(e) => setEditedNotes(e.target.value)}
-              rows={6}
-              placeholder="Add your notes here..."
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingShift(null)}>Cancel</Button>
-            <Button onClick={handleSaveNotes}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
-

@@ -1,14 +1,8 @@
 'use client';
 
-import type { LucideProps } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import type { Task } from '@/lib/types';
 
-export interface Task {
-  id: number;
-  text: string;
-  icon: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
-  completed: boolean;
-}
 
 interface TaskItemProps {
   task: Task;
