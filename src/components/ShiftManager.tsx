@@ -381,14 +381,7 @@ export function ShiftManager() {
                                             <TableHead>Duration</TableHead>
                                             {initialTasks.map(task => (
                                                 <TableHead key={task.id} className="text-center">
-                                                     <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <task.icon className="h-5 w-5 mx-auto" />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>{task.text}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
+                                                     {task.text}
                                                 </TableHead>
                                             ))}
                                             <TableHead className="w-[100px] text-center">Actions</TableHead>
