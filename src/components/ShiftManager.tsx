@@ -1,8 +1,10 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import {
   Accessibility,
+  Check,
   CheckCircle2,
   Circle,
   Clock,
@@ -34,6 +36,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const initialTasks: Omit<Task, 'completed'>[] = [
   { id: 1, text: 'Medication Reminder', icon: Pill },
@@ -318,51 +334,46 @@ export function ShiftManager() {
             </CardHeader>
             <CardContent>
                 {weeklyShifts.length > 0 ? (
-                    <div className="space-y-6">
-                        {weeklyShifts.map(shift => (
-                            <div key={shift.id} className="p-4 border rounded-lg">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="font-semibold text-lg">{shift.client.name}</h3>
-                                        <p className="text-sm text-muted-foreground">{format(new Date(shift.startTime), 'eeee, PPP')}</p>
-                                    </div>
-                                    <Badge variant="outline">{formatDistanceStrict(new Date(shift.endTime), new Date(shift.startTime))}</Badge>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
-                                    <div className="flex flex-col gap-1">
-                                    <span className="text-muted-foreground">Start Time</span>
-                                    <span className="font-semibold">{format(new Date(shift.startTime), 'p')}</span>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                    <span className="text-muted-foreground">End Time</span>
-                                    <span className="font-semibold">{format(new Date(shift.endTime), 'p')}</span>
-                                    </div>
-                                </div>
-                                
-                                {shift.completedTasks.length > 0 && (
-                                    <div className="mb-4">
-                                        <h4 className="font-semibold mb-2 text-sm">Completed Tasks</h4>
-                                        <ul className="space-y-2">
-                                            {shift.completedTasks.map(task => (
-                                                <li key={task.id} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                                <span>{task.text}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                
-                                {shift.notes && (
-                                    <div>
-                                        <h4 className="font-semibold mb-2 text-sm">Notes</h4>
-                                        <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">{shift.notes}</p>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                    <TooltipProvider>
+                      <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[180px]">Client</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Duration</TableHead>
+                                {initialTasks.map(task => (
+                                    <TableHead key={task.id} className="text-center">
+                                         <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <task.icon className="h-5 w-5 mx-auto" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{task.text}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TableHead>
+                                ))}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {weeklyShifts.map(shift => (
+                                <TableRow key={shift.id}>
+                                    <TableCell className="font-medium">{shift.client.name}</TableCell>
+                                    <TableCell>{format(new Date(shift.startTime), 'eee, PP')}</TableCell>
+                                    <TableCell>{formatDistanceStrict(new Date(shift.endTime), new Date(shift.startTime))}</TableCell>
+                                    {initialTasks.map(task => {
+                                        const isCompleted = shift.completedTasks.some(ct => ct.id === task.id);
+                                        return (
+                                            <TableCell key={task.id} className="text-center">
+                                                {isCompleted ? <Check className="h-5 w-5 mx-auto text-green-500" /> : <Circle className="h-5 w-5 mx-auto text-muted-foreground/50" />}
+                                            </TableCell>
+                                        )
+                                    })}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </TooltipProvider>
                 ) : (
                     <p className="text-muted-foreground text-center">No shifts recorded this week.</p>
                 )}
