@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Circle,
   Clock,
+  Edit,
   Pill,
   ShowerHead,
   Sparkles,
@@ -50,6 +51,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+
 
 const initialTasks: Omit<Task, 'completed'>[] = [
   { id: 1, text: 'Medication Reminder', icon: Pill },
@@ -87,6 +97,8 @@ export function ShiftManager() {
   const [activeShiftClient, setActiveShiftClient] = useState<{ id: string; name: string; } | null>(null);
   const [completedShifts, setCompletedShifts] = useState<CompletedShift[]>([]);
   const [viewingSummary, setViewingSummary] = useState(false);
+  const [editingShift, setEditingShift] = useState<CompletedShift | null>(null);
+  const [editedNotes, setEditedNotes] = useState('');
 
   useEffect(() => {
     try {
@@ -168,6 +180,21 @@ export function ShiftManager() {
         task.id === id ? { ...task, completed: !task.completed } : task
       )
     );
+  };
+
+  const handleOpenEditDialog = (shift: CompletedShift) => {
+    setEditingShift(shift);
+    setEditedNotes(shift.notes);
+  };
+
+  const handleSaveNotes = () => {
+    if (!editingShift) return;
+    const updatedShifts = completedShifts.map(s => 
+      s.id === editingShift.id ? { ...s, notes: editedNotes } : s
+    );
+    setCompletedShifts(updatedShifts);
+    setEditingShift(null);
+    setEditedNotes('');
   };
 
   const getWeeklyShifts = () => {
@@ -353,6 +380,7 @@ export function ShiftManager() {
                                         </Tooltip>
                                     </TableHead>
                                 ))}
+                                <TableHead className="w-[100px] text-center">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -369,6 +397,18 @@ export function ShiftManager() {
                                             </TableCell>
                                         )
                                     })}
+                                    <TableCell className="text-center">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" onClick={() => handleOpenEditDialog(shift)}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Edit Notes</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -380,6 +420,29 @@ export function ShiftManager() {
             </CardContent>
         </Card>
       )}
+
+      <Dialog open={!!editingShift} onOpenChange={(isOpen) => !isOpen && setEditingShift(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Shift Notes</DialogTitle>
+            <DialogDescription>
+              Update the notes for the shift with {editingShift?.client.name} on {editingShift && format(new Date(editingShift.startTime), 'PP')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              value={editedNotes}
+              onChange={(e) => setEditedNotes(e.target.value)}
+              rows={6}
+              placeholder="Add your notes here..."
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingShift(null)}>Cancel</Button>
+            <Button onClick={handleSaveNotes}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
