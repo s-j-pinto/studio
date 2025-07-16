@@ -286,9 +286,9 @@ export function CaregiverView({ onShiftComplete }: CaregiverViewProps) {
         </CardContent>
         <CardFooter>
             {isShiftActive ? (
-              <Button onClick={handleEndShift} variant="destructive" className="w-full md:w-auto">End Shift</Button>
+              <Button onClick={handleEndShift} variant="destructive" className="w-full md:w-auto">Done</Button>
             ) : (
-              <Button onClick={handleStartShift} className="w-full md:w-auto" disabled={!selectedClientId || !selectedDate || !startTime}>Start Shift</Button>
+              <Button onClick={handleStartShift} className="w-full md:w-auto" disabled={!selectedClientId || !selectedDate || !startTime}>Enter Shift Notes</Button>
             )}
         </CardFooter>
       </Card>
