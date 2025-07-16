@@ -12,7 +12,7 @@ import {
   Users,
   UtensilsCrossed,
 } from 'lucide-react';
-import { format, formatDistanceStrict } from 'date-fns';
+import { format, formatDistanceStrict, startOfWeek, isWithinInterval } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -50,6 +50,16 @@ const clients = [
     { id: '3', name: 'Beatrice Miller' },
 ];
 
+interface CompletedShift {
+  id: string;
+  client: { id: string; name: string };
+  startTime: string;
+  endTime: string;
+  completedTasks: Task[];
+  incompleteTasks: Task[];
+  notes: string;
+}
+
 export function ShiftManager() {
   const [isShiftActive, setIsShiftActive] = useState(false);
   const [shiftStartTime, setShiftStartTime] = useState<Date | null>(null);
@@ -59,6 +69,23 @@ export function ShiftManager() {
   const [notes, setNotes] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [activeShiftClient, setActiveShiftClient] = useState<{ id: string; name: string; } | null>(null);
+  const [completedShifts, setCompletedShifts] = useState<CompletedShift[]>([]);
+  const [viewingSummary, setViewingSummary] = useState(false);
+
+  useEffect(() => {
+    try {
+        const storedShifts = localStorage.getItem('completedShifts');
+        if (storedShifts) {
+            setCompletedShifts(JSON.parse(storedShifts));
+        }
+    } catch (error) {
+        console.error("Failed to parse shifts from localStorage", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('completedShifts', JSON.stringify(completedShifts));
+  }, [completedShifts]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -86,11 +113,27 @@ export function ShiftManager() {
     setActiveShiftClient(client);
     setTasks(initialTasks.map((task) => ({ ...task, completed: false })));
     setNotes('');
+    setViewingSummary(false);
   };
 
   const handleEndShift = () => {
+    const endTime = new Date();
+    setShiftEndTime(endTime);
     setIsShiftActive(false);
-    setShiftEndTime(new Date());
+
+    if (shiftStartTime && activeShiftClient) {
+        const newShift: CompletedShift = {
+            id: new Date().toISOString(),
+            client: activeShiftClient,
+            startTime: shiftStartTime.toISOString(),
+            endTime: endTime.toISOString(),
+            completedTasks: tasks.filter(t => t.completed),
+            incompleteTasks: tasks.filter(t => !t.completed),
+            notes,
+        };
+        setCompletedShifts(prev => [...prev, newShift]);
+    }
+    setViewingSummary(true);
   };
 
   const handleStartNewShift = () => {
@@ -100,6 +143,7 @@ export function ShiftManager() {
     setSelectedClientId(null);
     setActiveShiftClient(null);
     setIsShiftActive(false);
+    setViewingSummary(false);
   };
   
   const handleToggleTask = (id: number) => {
@@ -110,67 +154,82 @@ export function ShiftManager() {
     );
   };
 
-  if (shiftStartTime && shiftEndTime) {
+  const getWeeklyShifts = () => {
+    const today = new Date();
+    const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    return completedShifts.filter(shift => 
+        isWithinInterval(new Date(shift.startTime), { start: weekStart, end: weekEnd })
+    ).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+  };
+
+  const weeklyShifts = getWeeklyShifts();
+
+  if (viewingSummary && shiftStartTime && shiftEndTime) {
     const completedTasks = tasks.filter((task) => task.completed);
     const incompleteTasks = tasks.filter((task) => !task.completed);
     
     return (
-      <Card className="w-full max-w-4xl mx-auto animate-in fade-in-50 duration-500">
-        <CardHeader>
-          <CardTitle className="text-2xl">Shift Summary</CardTitle>
-          <CardDescription>
-            Report for {activeShiftClient?.name} on {format(shiftStartTime, 'PPP')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground">Start Time</span>
-              <span className="font-semibold">{format(shiftStartTime, 'p')}</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground">End Time</span>
-              <span className="font-semibold">{format(shiftEndTime, 'p')}</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground">Total Duration</span>
-              <span className="font-semibold">{formatDistanceStrict(shiftEndTime, shiftStartTime)}</span>
-            </div>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Completed Tasks ({completedTasks.length})</h3>
-            <ul className="space-y-2">
-              {completedTasks.map(task => (
-                <li key={task.id} className="flex items-center gap-2 text-muted-foreground">
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span>{task.text}</span>
-                </li>
-              ))}
-               {completedTasks.length === 0 && <p className="text-sm text-muted-foreground">No tasks were completed.</p>}
-            </ul>
-          </div>
-          {incompleteTasks.length > 0 && (
-             <div>
-                <h3 className="font-semibold mb-2">Incomplete Tasks ({incompleteTasks.length})</h3>
-                <ul className="space-y-2">
-                  {incompleteTasks.map(task => (
-                    <li key={task.id} className="flex items-center gap-2 text-muted-foreground">
-                      <Circle className="h-4 w-4 text-gray-400" />
-                      <span>{task.text}</span>
-                    </li>
-                  ))}
-                </ul>
+      <div className="w-full max-w-4xl mx-auto grid gap-8">
+        <Card className="animate-in fade-in-50 duration-500">
+          <CardHeader>
+            <CardTitle className="text-2xl">Shift Summary</CardTitle>
+            <CardDescription>
+              Report for {activeShiftClient?.name} on {format(shiftStartTime, 'PPP')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground">Start Time</span>
+                <span className="font-semibold">{format(shiftStartTime, 'p')}</span>
               </div>
-          )}
-          <div>
-            <h3 className="font-semibold mb-2">Notes</h3>
-            <p className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">{notes || 'No notes were added.'}</p>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button onClick={handleStartNewShift}>Start New Shift</Button>
-        </CardFooter>
-      </Card>
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground">End Time</span>
+                <span className="font-semibold">{format(shiftEndTime, 'p')}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground">Total Duration</span>
+                <span className="font-semibold">{formatDistanceStrict(shiftEndTime, shiftStartTime)}</span>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">Completed Tasks ({completedTasks.length})</h3>
+              <ul className="space-y-2">
+                {completedTasks.map(task => (
+                  <li key={task.id} className="flex items-center gap-2 text-muted-foreground">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span>{task.text}</span>
+                  </li>
+                ))}
+                 {completedTasks.length === 0 && <p className="text-sm text-muted-foreground">No tasks were completed.</p>}
+              </ul>
+            </div>
+            {incompleteTasks.length > 0 && (
+               <div>
+                  <h3 className="font-semibold mb-2">Incomplete Tasks ({incompleteTasks.length})</h3>
+                  <ul className="space-y-2">
+                    {incompleteTasks.map(task => (
+                      <li key={task.id} className="flex items-center gap-2 text-muted-foreground">
+                        <Circle className="h-4 w-4 text-gray-400" />
+                        <span>{task.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+            )}
+            <div>
+              <h3 className="font-semibold mb-2">Notes</h3>
+              <p className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">{notes || 'No notes were added.'}</p>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={handleStartNewShift}>Start New Shift</Button>
+          </CardFooter>
+        </Card>
+      </div>
     );
   }
 
@@ -249,6 +308,66 @@ export function ShiftManager() {
             </CardContent>
           </Card>
         </>
+      )}
+
+      {!isShiftActive && (
+        <Card>
+            <CardHeader>
+                <CardTitle>Weekly Shift History</CardTitle>
+                <CardDescription>A summary of all shifts recorded this week.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {weeklyShifts.length > 0 ? (
+                    <div className="space-y-6">
+                        {weeklyShifts.map(shift => (
+                            <div key={shift.id} className="p-4 border rounded-lg">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 className="font-semibold text-lg">{shift.client.name}</h3>
+                                        <p className="text-sm text-muted-foreground">{format(new Date(shift.startTime), 'eeee, PPP')}</p>
+                                    </div>
+                                    <Badge variant="outline">{formatDistanceStrict(new Date(shift.endTime), new Date(shift.startTime))}</Badge>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
+                                    <div className="flex flex-col gap-1">
+                                    <span className="text-muted-foreground">Start Time</span>
+                                    <span className="font-semibold">{format(new Date(shift.startTime), 'p')}</span>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                    <span className="text-muted-foreground">End Time</span>
+                                    <span className="font-semibold">{format(new Date(shift.endTime), 'p')}</span>
+                                    </div>
+                                </div>
+                                
+                                {shift.completedTasks.length > 0 && (
+                                    <div className="mb-4">
+                                        <h4 className="font-semibold mb-2 text-sm">Completed Tasks</h4>
+                                        <ul className="space-y-2">
+                                            {shift.completedTasks.map(task => (
+                                                <li key={task.id} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                                <span>{task.text}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                                
+                                {shift.notes && (
+                                    <div>
+                                        <h4 className="font-semibold mb-2 text-sm">Notes</h4>
+                                        <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">{shift.notes}</p>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-muted-foreground text-center">No shifts recorded this week.</p>
+                )}
+            </CardContent>
+        </Card>
       )}
     </div>
   );
