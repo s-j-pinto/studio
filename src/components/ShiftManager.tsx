@@ -99,6 +99,7 @@ export function ShiftManager() {
   const [viewingSummary, setViewingSummary] = useState(false);
   const [editingShift, setEditingShift] = useState<CompletedShift | null>(null);
   const [editedNotes, setEditedNotes] = useState('');
+  const [filterClientId, setFilterClientId] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -203,9 +204,14 @@ export function ShiftManager() {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
 
-    return completedShifts.filter(shift => 
+    const allWeeklyShifts = completedShifts.filter(shift => 
         isWithinInterval(new Date(shift.startTime), { start: weekStart, end: weekEnd })
     ).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+
+    if (filterClientId === 'all' || !filterClientId) {
+        return allWeeklyShifts;
+    }
+    return allWeeklyShifts.filter(shift => shift.client.id === filterClientId);
   };
 
   const weeklyShifts = getWeeklyShifts();
@@ -356,8 +362,27 @@ export function ShiftManager() {
       {!isShiftActive && (
         <Card>
             <CardHeader>
-                <CardTitle>Weekly Shift History</CardTitle>
-                <CardDescription>A summary of all shifts recorded this week.</CardDescription>
+                <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                    <div>
+                        <CardTitle>Weekly Shift History</CardTitle>
+                        <CardDescription>A summary of all shifts recorded this week.</CardDescription>
+                    </div>
+                     <div className="w-full md:w-64">
+                         <Select onValueChange={setFilterClientId} defaultValue="all">
+                            <SelectTrigger id="history-client-select">
+                                <SelectValue placeholder="Select a client" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Clients</SelectItem>
+                                {clients.map((client) => (
+                                <SelectItem key={client.id} value={client.id}>
+                                    {client.name}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
                 {weeklyShifts.length > 0 ? (
@@ -415,7 +440,7 @@ export function ShiftManager() {
                       </Table>
                     </TooltipProvider>
                 ) : (
-                    <p className="text-muted-foreground text-center">No shifts recorded this week.</p>
+                    <p className="text-muted-foreground text-center">No shifts recorded for the selected client this week.</p>
                 )}
             </CardContent>
         </Card>
