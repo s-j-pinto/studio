@@ -2,69 +2,105 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { HandHeart } from 'lucide-react';
-import { CaregiverView } from '@/components/CaregiverView';
-import { ManagerView } from '@/components/ManagerView';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { CompletedShift } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
-export default function Home() {
-  const [completedShifts, setCompletedShifts] = useState<CompletedShift[]>([]);
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
-    try {
-      const storedShifts = localStorage.getItem('completedShifts');
-      if (storedShifts) {
-        setCompletedShifts(JSON.parse(storedShifts));
-      }
-    } catch (error) {
-      console.error('Failed to parse shifts from localStorage', error);
+    const isAuthenticated = localStorage.getItem('isAuthenticated');
+    if (isAuthenticated === 'true') {
+      router.replace('/dashboard');
     }
-  }, []);
+  }, [router]);
 
-  useEffect(() => {
-    localStorage.setItem('completedShifts', JSON.stringify(completedShifts));
-  }, [completedShifts]);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  const addCompletedShift = (shift: CompletedShift) => {
-    setCompletedShifts(prev => [...prev, shift]);
+    // Simple hardcoded authentication for prototype
+    if (email === 'caregiver@example.com' && password === 'password') {
+      localStorage.setItem('isAuthenticated', 'true');
+      router.replace('/dashboard');
+    } else {
+      toast({
+        title: 'Login Failed',
+        description: 'Invalid email or password.',
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+    }
   };
-
-  const updateShiftNotes = (shiftId: string, notes: string) => {
-    setCompletedShifts(prev =>
-      prev.map(s => (s.id === shiftId ? { ...s, notes } : s))
-    );
-  };
-
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur-sm md:px-6">
-        <nav className="flex items-center gap-2 text-lg font-medium md:text-base">
-          <a
-            href="#"
-            className="flex items-center gap-2 text-lg font-semibold text-foreground"
-          >
-            <HandHeart className="h-6 w-6" />
-            <span>Shift Notes</span>
-          </a>
-        </nav>
-      </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <Tabs defaultValue="caregiver" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
-            <TabsTrigger value="caregiver">Caregiver View</TabsTrigger>
-            <TabsTrigger value="manager">Manager View</TabsTrigger>
-          </TabsList>
-          <TabsContent value="caregiver">
-            <CaregiverView onShiftComplete={addCompletedShift} />
-          </TabsContent>
-          <TabsContent value="manager">
-            <ManagerView completedShifts={completedShifts} onUpdateNotes={updateShiftNotes} />
-          </TabsContent>
-        </Tabs>
-      </main>
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md">
+        <div className="flex justify-center mb-6">
+            <div
+                className="flex items-center gap-2 text-lg font-semibold text-foreground"
+            >
+                <HandHeart className="h-6 w-6" />
+                <span>Shift Notes</span>
+            </div>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Caregiver Login</CardTitle>
+            <CardDescription>
+              Enter your credentials to access your shifts.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="caregiver@example.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="grid gap-2">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Logging in...' : 'Login'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
