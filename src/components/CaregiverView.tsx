@@ -70,8 +70,15 @@ export function CaregiverView({ onShiftComplete }: CaregiverViewProps) {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [activeShiftClient, setActiveShiftClient] = useState<{ id: string; name: string; } | null>(null);
   const [viewingSummary, setViewingSummary] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [startTime, setStartTime] = useState(format(new Date(), 'HH:mm'));
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [startTime, setStartTime] = useState('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    setSelectedDate(new Date());
+    setStartTime(format(new Date(), 'HH:mm'));
+  }, []);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -209,6 +216,10 @@ export function CaregiverView({ onShiftComplete }: CaregiverViewProps) {
         </Card>
       </div>
     );
+  }
+
+  if (!isClient) {
+    return null;
   }
 
   return (
