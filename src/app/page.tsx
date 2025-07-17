@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { HandHeart } from 'lucide-react';
 import { CaregiverView } from '@/components/CaregiverView';
 import { ManagerView } from '@/components/ManagerView';
@@ -39,7 +40,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-background/95 px-4 backdrop-blur-sm md:px-6">
+      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur-sm md:px-6">
         <nav className="flex items-center gap-2 text-lg font-medium md:text-base">
           <a
             href="#"
@@ -49,6 +50,16 @@ export default function Home() {
             <span>Shift Notes</span>
           </a>
         </nav>
+        <div className="flex items-center">
+            <Image
+                src="https://www.firstlighthomecare.com/wp-content/uploads/2021/03/flhc-logo-web.png"
+                alt="FirstLight Home Care Logo"
+                width={150}
+                height={40}
+                className="object-contain"
+                priority
+            />
+        </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <Tabs defaultValue="caregiver" className="w-full">
