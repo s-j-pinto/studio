@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import {
   Accessibility,
   Check,
@@ -116,9 +117,18 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
   return (
     <div className="w-full max-w-4xl mx-auto grid gap-8">
         <Card>
-            <CardHeader>
-              <CardTitle>Weekly Shift History</CardTitle>
-              <CardDescription>Select a client to view their shift summary for the week.</CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div>
+                <CardTitle>Weekly Shift History</CardTitle>
+                <CardDescription>Select a client to view their shift summary for the week.</CardDescription>
+              </div>
+               <Image 
+                  src="https://storage.googleapis.com/aif-us-build-prod-v1-data/prod/2024-07-17T17_44_12.164Z/logo.png" 
+                  alt="FirstLight Home Care Logo"
+                  width={150}
+                  height={40}
+                  className="object-contain"
+              />
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid gap-2 max-w-sm">
