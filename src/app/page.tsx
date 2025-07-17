@@ -46,13 +46,8 @@ export default function Home() {
             href="#"
             className="flex items-center gap-2 text-lg font-semibold text-foreground"
           >
-            <Image
-                src="https://www.firstlighthomecare.com/wp-content/uploads/2022/10/flhc-logo-web.png"
-                alt="FirstLight Home Care Logo"
-                width={160}
-                height={40}
-                className="object-contain"
-              />
+            <HandHeart className="h-6 w-6" />
+            <span>Shift Notes</span>
           </a>
         </nav>
       </header>
