@@ -12,7 +12,7 @@ import {
   Users,
   UtensilsCrossed,
 } from 'lucide-react';
-import { format, formatDistanceStrict, startOfWeek, isWithinInterval, eachDayOfInterval, isEqual, startOfDay } from 'date-fns';
+import { format, formatDistanceStrict, startOfWeek, isWithinInterval, isEqual, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -45,7 +45,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const initialTasks: Omit<Task, 'completed'>[] = [
   { id: 1, text: 'Medication Reminder', icon: Pill },
@@ -56,6 +63,12 @@ const initialTasks: Omit<Task, 'completed'>[] = [
   { id: 6, text: 'Mobility Assistance', icon: Accessibility },
 ];
 
+const clients = [
+    { id: '1', name: 'Eleanor Vance' },
+    { id: '2', name: 'Arthur Pendelton' },
+    { id: '3', name: 'Beatrice Miller' },
+];
+
 interface ManagerViewProps {
   completedShifts: CompletedShift[];
   onUpdateNotes: (shiftId: string, notes: string) => void;
@@ -64,6 +77,7 @@ interface ManagerViewProps {
 export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps) {
   const [editingShift, setEditingShift] = useState<CompletedShift | null>(null);
   const [editedNotes, setEditedNotes] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   const handleOpenEditDialog = (shift: CompletedShift) => {
     setEditingShift(shift);
@@ -77,116 +91,127 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
     setEditedNotes('');
   };
 
-  const getWeeklyShiftsByClient = () => {
+  const getWeeklyShiftsForClient = () => {
+    if (!selectedClientId) return [];
+    
     const today = new Date();
     const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
 
-    const weeklyShifts = completedShifts.filter(shift => 
-        isWithinInterval(new Date(shift.startTime), { start: weekStart, end: weekEnd })
-    ).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-
-    return weeklyShifts.reduce((acc, shift) => {
-        const clientName = shift.client.name;
-        if (!acc[clientName]) {
-            acc[clientName] = [];
-        }
-        acc[clientName].push(shift);
-        return acc;
-    }, {} as Record<string, CompletedShift[]>);
+    return completedShifts
+        .filter(shift => 
+            shift.client.id === selectedClientId &&
+            isWithinInterval(new Date(shift.startTime), { start: weekStart, end: weekEnd })
+        )
+        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   };
   
-  const weeklyShiftsByClient = getWeeklyShiftsByClient();
+  const clientShifts = getWeeklyShiftsForClient();
+  const weekDates = Array.from(new Set(clientShifts.map(s => startOfDay(new Date(s.startTime)).getTime())))
+      .map(t => new Date(t))
+      .sort((a,b) => a.getTime() - b.getTime());
+
 
   return (
     <div className="w-full max-w-4xl mx-auto grid gap-8">
         <Card>
             <CardHeader>
               <CardTitle>Weekly Shift History</CardTitle>
-              <CardDescription>A summary of all shifts recorded this week, grouped by client.</CardDescription>
+              <CardDescription>Select a client to view their shift summary for the week.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
-                {Object.keys(weeklyShiftsByClient).length > 0 ? (
-                    Object.entries(weeklyShiftsByClient).map(([clientName, shifts]) => {
-                        const weekDates = Array.from(new Set(shifts.map(s => startOfDay(new Date(s.startTime)).getTime())))
-                            .map(t => new Date(t))
-                            .sort((a,b) => a.getTime() - b.getTime());
-
-                        return (
-                            <div key={clientName}>
-                                <h3 className="text-lg font-semibold mb-4">{clientName}</h3>
-                                <TooltipProvider>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-[200px]">Task</TableHead>
-                                                {weekDates.map(date => (
-                                                    <TableHead key={date.toISOString()} className="text-center">
-                                                        {format(date, 'eee, dd')}
-                                                    </TableHead>
-                                                ))}
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {initialTasks.map(task => (
-                                                <TableRow key={task.id}>
-                                                    <TableCell className="font-medium">{task.text}</TableCell>
-                                                    {weekDates.map(date => {
-                                                        const shiftOnDate = shifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
-                                                        if (!shiftOnDate) {
-                                                          return <TableCell key={date.toISOString()} className="text-center"></TableCell>;
-                                                        }
-                                                        const isCompleted = shiftOnDate.completedTasks.some(ct => ct.id === task.id);
-                                                        return (
-                                                            <TableCell key={date.toISOString()} className="text-center">
-                                                                {isCompleted && <Check className="h-5 w-5 mx-auto text-green-500" />}
-                                                            </TableCell>
-                                                        )
-                                                    })}
-                                                </TableRow>
-                                            ))}
-                                            <TableRow>
-                                                <TableCell className="font-medium">Duration</TableCell>
-                                                {weekDates.map(date => {
-                                                    const shiftOnDate = shifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
-                                                    return (
-                                                        <TableCell key={date.toISOString()} className="text-center text-xs text-muted-foreground">
-                                                            {shiftOnDate ? formatDistanceStrict(new Date(shiftOnDate.endTime), new Date(shiftOnDate.startTime)) : '-'}
-                                                        </TableCell>
-                                                    )
-                                                })}
-                                            </TableRow>
-                                             <TableRow>
-                                                <TableCell className="font-medium">Actions</TableCell>
-                                                 {weekDates.map(date => {
-                                                    const shiftOnDate = shifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
-                                                    return (
-                                                        <TableCell key={date.toISOString()} className="text-center">
-                                                            {shiftOnDate ? (
-                                                                <Tooltip>
-                                                                    <TooltipTrigger asChild>
-                                                                        <Button variant="ghost" size="icon" onClick={() => handleOpenEditDialog(shiftOnDate)}>
-                                                                            <Edit className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent>
-                                                                        <p>Edit Notes</p>
-                                                                    </TooltipContent>
-                                                                </Tooltip>
-                                                            ): null}
-                                                        </TableCell>
-                                                    )
-                                                })}
-                                            </TableRow>
-                                        </TableBody>
-                                    </Table>
-                                </TooltipProvider>
-                            </div>
-                        )
-                    })
+                <div className="grid gap-2 max-w-sm">
+                    <Label htmlFor="client-select">Client</Label>
+                    <Select onValueChange={setSelectedClientId} value={selectedClientId ?? undefined}>
+                      <SelectTrigger id="client-select">
+                        <SelectValue placeholder="Select a client" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                </div>
+                
+                {selectedClientId ? (
+                  clientShifts.length > 0 ? (
+                    <div>
+                      <TooltipProvider>
+                          <Table>
+                              <TableHeader>
+                                  <TableRow>
+                                      <TableHead className="w-[200px]">Task</TableHead>
+                                      {weekDates.map(date => (
+                                          <TableHead key={date.toISOString()} className="text-center">
+                                              {format(date, 'eee, dd')}
+                                          </TableHead>
+                                      ))}
+                                  </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                  {initialTasks.map(task => (
+                                      <TableRow key={task.id}>
+                                          <TableCell className="font-medium">{task.text}</TableCell>
+                                          {weekDates.map(date => {
+                                              const shiftOnDate = clientShifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
+                                              if (!shiftOnDate) {
+                                                return <TableCell key={date.toISOString()} className="text-center"></TableCell>;
+                                              }
+                                              const isCompleted = shiftOnDate.completedTasks.some(ct => ct.id === task.id);
+                                              return (
+                                                  <TableCell key={date.toISOString()} className="text-center">
+                                                      {isCompleted && <Check className="h-5 w-5 mx-auto text-green-500" />}
+                                                  </TableCell>
+                                              )
+                                          })}
+                                      </TableRow>
+                                  ))}
+                                  <TableRow>
+                                      <TableCell className="font-medium">Duration</TableCell>
+                                      {weekDates.map(date => {
+                                          const shiftOnDate = clientShifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
+                                          return (
+                                              <TableCell key={date.toISOString()} className="text-center text-xs text-muted-foreground">
+                                                  {shiftOnDate ? formatDistanceStrict(new Date(shiftOnDate.endTime), new Date(shiftOnDate.startTime)) : '-'}
+                                              </TableCell>
+                                          )
+                                      })}
+                                  </TableRow>
+                                   <TableRow>
+                                      <TableCell className="font-medium">Actions</TableCell>
+                                       {weekDates.map(date => {
+                                          const shiftOnDate = clientShifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
+                                          return (
+                                              <TableCell key={date.toISOString()} className="text-center">
+                                                  {shiftOnDate ? (
+                                                      <Tooltip>
+                                                          <TooltipTrigger asChild>
+                                                              <Button variant="ghost" size="icon" onClick={() => handleOpenEditDialog(shiftOnDate)}>
+                                                                  <Edit className="h-4 w-4" />
+                                                              </Button>
+                                                          </TooltipTrigger>
+                                                          <TooltipContent>
+                                                              <p>Edit Notes</p>
+                                                          </TooltipContent>
+                                                      </Tooltip>
+                                                  ): null}
+                                              </TableCell>
+                                          )
+                                      })}
+                                  </TableRow>
+                              </TableBody>
+                          </Table>
+                      </TooltipProvider>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center">No shifts recorded for this client this week.</p>
+                  )
                 ) : (
-                    <p className="text-muted-foreground text-center">No shifts recorded this week.</p>
+                    <p className="text-muted-foreground text-center">Please select a client to see their weekly shift history.</p>
                 )}
             </CardContent>
         </Card>
