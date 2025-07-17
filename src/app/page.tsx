@@ -11,17 +11,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { HandHeart } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
@@ -30,22 +24,13 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = () => {
     setIsLoading(true);
-
-    // Simple hardcoded authentication for prototype
-    if (email === 'caregiver@example.com' && password === 'password') {
-      localStorage.setItem('isAuthenticated', 'true');
-      router.replace('/dashboard');
-    } else {
-      toast({
-        title: 'Login Failed',
-        description: 'Invalid email or password.',
-        variant: 'destructive',
-      });
-      setIsLoading(false);
-    }
+    // In a real application, this would involve redirecting to
+    // Teletrack and handling the callback.
+    // For this prototype, we'll simulate a successful login.
+    localStorage.setItem('isAuthenticated', 'true');
+    router.replace('/dashboard');
   };
 
   return (
@@ -63,41 +48,15 @@ export default function LoginPage() {
           <CardHeader>
             <CardTitle className="text-2xl">Caregiver Login</CardTitle>
             <CardDescription>
-              Enter your credentials to access your shifts.
+              Login using your Teletrack from Spectrum account.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="caregiver@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Logging in...' : 'Login'}
+            <div className="grid gap-4">
+              <Button onClick={handleLogin} className="w-full" disabled={isLoading}>
+                {isLoading ? 'Redirecting...' : 'Login with Teletrack'}
               </Button>
-            </form>
+            </div>
           </CardContent>
         </Card>
       </div>
