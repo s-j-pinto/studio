@@ -12,7 +12,7 @@ import {
   Users,
   UtensilsCrossed,
 } from 'lucide-react';
-import { format, formatDistanceStrict, startOfWeek, isWithinInterval, isEqual, startOfDay } from 'date-fns';
+import { format, startOfWeek, isWithinInterval, isEqual, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -171,12 +171,12 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
                                       </TableRow>
                                   ))}
                                   <TableRow>
-                                      <TableCell className="font-medium">Duration</TableCell>
+                                      <TableCell className="font-medium">Start Time</TableCell>
                                       {weekDates.map(date => {
                                           const shiftOnDate = clientShifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
                                           return (
                                               <TableCell key={date.toISOString()} className="text-center text-xs text-muted-foreground">
-                                                  {shiftOnDate ? formatDistanceStrict(new Date(shiftOnDate.endTime), new Date(shiftOnDate.startTime)) : '-'}
+                                                  {shiftOnDate ? format(new Date(shiftOnDate.startTime), 'p') : '-'}
                                               </TableCell>
                                           )
                                       })}
