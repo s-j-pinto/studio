@@ -50,16 +50,6 @@ export default function Home() {
             <span>Shift Notes</span>
           </a>
         </nav>
-        <div className="flex items-center">
-            <Image
-                src="https://www.firstlighthomecare.com/wp-content/uploads/2021/03/flhc-logo-web.png"
-                alt="FirstLight Home Care Logo"
-                width={150}
-                height={40}
-                className="object-contain"
-                priority
-            />
-        </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <Tabs defaultValue="caregiver" className="w-full">
