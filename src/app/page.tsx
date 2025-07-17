@@ -59,22 +59,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // In a real application, you would make the API call here.
-      // const response = await fetch('https://gps.spectrumvoice.com/api/caregiver/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
+      const response = await fetch('https://gps.spectrumvoice.com/api/caregiver/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
 
-      // if (!response.ok) {
-      //   throw new Error('Login failed. Please check your credentials.');
-      // }
+      if (!response.ok) {
+        throw new Error('Login failed. Please check your credentials.');
+      }
       
-      // For this prototype, we'll simulate a successful login.
-      console.log('Simulating login with:', data);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-
-
       localStorage.setItem('isAuthenticated', 'true');
       router.replace('/dashboard');
 
