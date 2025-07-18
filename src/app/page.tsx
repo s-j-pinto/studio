@@ -28,7 +28,7 @@ import { useToast } from "@/hooks/use-toast"
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  password: z.string().min(1, { message: 'Password is required.' }),
+  pin: z.string().min(1, { message: 'Pin is required.' }),
   companyId: z.string().min(1, { message: 'Company ID is required.' }),
 });
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
-      password: '',
+      pin: '',
       companyId: '',
     },
   });
@@ -58,11 +58,17 @@ export default function LoginPage() {
   const handleLogin = async (data: LoginFormValues) => {
     setIsLoading(true);
 
+    const apiPayload = {
+      email: data.email,
+      password: data.pin, // The API expects 'password', so we map 'pin' to it
+      companyId: data.companyId,
+    };
+
     try {
       const response = await fetch('https://gps.spectrumvoice.com/api/caregiver/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(apiPayload),
       });
 
       if (!response.ok) {
@@ -120,12 +126,12 @@ export default function LoginPage() {
                 />
                 <FormField
                   control={form.control}
-                  name="password"
+                  name="pin"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Pin</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input type="password" placeholder="••••" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
