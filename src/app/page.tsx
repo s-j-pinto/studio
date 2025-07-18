@@ -28,7 +28,7 @@ import { useToast } from "@/hooks/use-toast"
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  pin: z.string().min(1, { message: 'Pin is required.' }),
+  pin: z.string().min(4, { message: '4 digit Pin is required.' }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
