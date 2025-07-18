@@ -58,8 +58,8 @@ export default function LoginPage() {
 
     const apiPayload = {
       email: data.email,
-      password: data.pin, // The API expects 'password', so we map 'pin' to it
-      companyId: 'test-company', // Hardcoding company ID as it was removed from the form
+      pin: data.pin, // The API expects 'password', so we map 'pin' to it
+      //companyId: 'test-company', // Hardcoding company ID as it was removed from the form
     };
 
     try {
