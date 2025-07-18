@@ -29,7 +29,6 @@ import { useToast } from "@/hooks/use-toast"
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   pin: z.string().min(1, { message: 'Pin is required.' }),
-  companyId: z.string().min(1, { message: 'Company ID is required.' }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -44,7 +43,6 @@ export default function LoginPage() {
     defaultValues: {
       email: '',
       pin: '',
-      companyId: '',
     },
   });
 
@@ -61,7 +59,7 @@ export default function LoginPage() {
     const apiPayload = {
       email: data.email,
       password: data.pin, // The API expects 'password', so we map 'pin' to it
-      companyId: data.companyId,
+      companyId: 'test-company', // Hardcoding company ID as it was removed from the form
     };
 
     try {
@@ -132,19 +130,6 @@ export default function LoginPage() {
                       <FormLabel>Pin</FormLabel>
                       <FormControl>
                         <Input type="password" placeholder="••••" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="companyId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company ID</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Your Company ID" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
