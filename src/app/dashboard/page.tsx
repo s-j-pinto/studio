@@ -32,6 +32,7 @@ export default function DashboardPage() {
     }
     try {
         const caregiverInfo = localStorage.getItem('caregiverInfo');
+        console.log('caregiverInfo', caregiverInfo);
         if (caregiverInfo) {
             const parsedInfo = JSON.parse(caregiverInfo);
             setCaregiverName(parsedInfo.MyName || null);

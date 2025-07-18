@@ -81,6 +81,8 @@ export default function LoginPage() {
       }
       
       const loginData = await response.json();
+      console.log('loginData', loginData);
+
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('caregiverInfo', JSON.stringify(loginData));
       router.replace('/dashboard');
