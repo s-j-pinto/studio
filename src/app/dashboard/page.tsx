@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const [completedShifts, setCompletedShifts] = useState<CompletedShift[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [caregiverName, setCaregiverName] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string | null>(null);
   const router = useRouter();
   
   useEffect(() => {
@@ -32,10 +33,10 @@ export default function DashboardPage() {
     }
     try {
         const caregiverInfo = localStorage.getItem('caregiverInfo');
-        console.log('caregiverInfo', caregiverInfo);
         if (caregiverInfo) {
             const parsedInfo = JSON.parse(caregiverInfo);
             setCaregiverName(parsedInfo.MyName || null);
+            setCompanyName(parsedInfo.companyName || null);
         }
     } catch (error) {
         console.error('Failed to parse caregiver info from localStorage', error);
@@ -115,7 +116,7 @@ export default function DashboardPage() {
               <TabsTrigger value="manager">Manager View</TabsTrigger>
             </TabsList>
             <TabsContent value="caregiver">
-              <CaregiverView caregiverName={caregiverName} onShiftComplete={addCompletedShift} />
+              <CaregiverView caregiverName={caregiverName} companyName={companyName} onShiftComplete={addCompletedShift} />
             </TabsContent>
             <TabsContent value="manager">
               <ManagerView completedShifts={completedShifts} onUpdateNotes={updateShiftNotes} />
