@@ -20,6 +20,7 @@ import type { CompletedShift } from '@/lib/types';
 export default function DashboardPage() {
   const [completedShifts, setCompletedShifts] = useState<CompletedShift[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const [caregiverName, setCaregiverName] = useState<string | null>(null);
   const router = useRouter();
   
   useEffect(() => {
@@ -27,6 +28,16 @@ export default function DashboardPage() {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
     if (isAuthenticated !== 'true') {
       router.replace('/');
+      return;
+    }
+    try {
+        const caregiverInfo = localStorage.getItem('caregiverInfo');
+        if (caregiverInfo) {
+            const parsedInfo = JSON.parse(caregiverInfo);
+            setCaregiverName(parsedInfo.MyName || null);
+        }
+    } catch (error) {
+        console.error('Failed to parse caregiver info from localStorage', error);
     }
   }, [router]);
 
@@ -61,6 +72,8 @@ export default function DashboardPage() {
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('caregiverInfo');
+    localStorage.removeItem('completedShifts');
     router.replace('/');
   };
 
@@ -101,7 +114,7 @@ export default function DashboardPage() {
               <TabsTrigger value="manager">Manager View</TabsTrigger>
             </TabsList>
             <TabsContent value="caregiver">
-              <CaregiverView onShiftComplete={addCompletedShift} />
+              <CaregiverView caregiverName={caregiverName} onShiftComplete={addCompletedShift} />
             </TabsContent>
             <TabsContent value="manager">
               <ManagerView completedShifts={completedShifts} onUpdateNotes={updateShiftNotes} />

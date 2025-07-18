@@ -58,9 +58,10 @@ const clients = [
 
 interface CaregiverViewProps {
   onShiftComplete: (shift: CompletedShift) => void;
+  caregiverName: string | null;
 }
 
-export function CaregiverView({ onShiftComplete }: CaregiverViewProps) {
+export function CaregiverView({ onShiftComplete, caregiverName }: CaregiverViewProps) {
   const [isShiftActive, setIsShiftActive] = useState(false);
   const [shiftStartTime, setShiftStartTime] = useState<Date | null>(null);
   const [shiftEndTime, setShiftEndTime] = useState<Date | null>(null);
@@ -231,7 +232,8 @@ export function CaregiverView({ onShiftComplete }: CaregiverViewProps) {
             {isShiftActive && <Badge variant="secondary" className="flex items-center gap-2"><Clock className="h-4 w-4" />{elapsedTime}</Badge>}
           </div>
            <CardDescription>
-            {isShiftActive && shiftStartTime ? `Shift for ${activeShiftClient?.name} started at ${format(shiftStartTime, 'p')}` : 'Select a client, date, and time to start a new shift.'}
+            {isShiftActive && shiftStartTime ? `Shift for ${activeShiftClient?.name} started at ${format(shiftStartTime, 'p')}` : 
+            `Welcome, ${caregiverName || 'Caregiver'}! Select a client, date, and time to start a new shift.`}
            </CardDescription>
         </CardHeader>
         <CardContent>

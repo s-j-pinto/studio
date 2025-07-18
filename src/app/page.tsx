@@ -80,7 +80,9 @@ export default function LoginPage() {
         throw new Error(errorMessage);
       }
       
+      const loginData = await response.json();
       localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('caregiverInfo', JSON.stringify(loginData));
       router.replace('/dashboard');
 
     } catch (error) {
