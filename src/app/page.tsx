@@ -61,7 +61,8 @@ export default function LoginPage() {
       pin: data.pin, // The API expects 'password', so we map 'pin' to it
       //companyId: 'test-company', // Hardcoding company ID as it was removed from the form
     };
-
+    console.log(apiPayload)
+    
     try {
       const response = await fetch('https://gps.spectrumvoice.com/api/caregiver/login', {
         method: 'POST',
