@@ -60,9 +60,10 @@ export default function LoginPage() {
       email: data.email,
       pin: data.pin,
     };
-    
+    console.log('apiPayload', apiPayload);
+
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch('https://gps.spectrumvoice.com/api/caregiver/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiPayload),
