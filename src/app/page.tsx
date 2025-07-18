@@ -58,20 +58,26 @@ export default function LoginPage() {
 
     const apiPayload = {
       email: data.email,
-      pin: data.pin, // The API expects 'password', so we map 'pin' to it
-      //companyId: 'test-company', // Hardcoding company ID as it was removed from the form
+      pin: data.pin,
     };
-    console.log(apiPayload)
     
     try {
-      const response = await fetch('https://gps.spectrumvoice.com/api/caregiver/login', {
+      const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiPayload),
       });
 
       if (!response.ok) {
-        throw new Error('Login failed. Please check your credentials.');
+        let errorMessage = 'Login failed. Please check your credentials.';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          // Response was not JSON, use the status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
       
       localStorage.setItem('isAuthenticated', 'true');
