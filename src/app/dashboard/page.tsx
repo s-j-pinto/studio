@@ -36,7 +36,7 @@ export default function DashboardPage() {
         if (caregiverInfo) {
             const parsedInfo = JSON.parse(caregiverInfo);
             setCaregiverName(parsedInfo.MyName || null);
-            setCompanyName(parsedInfo.companyName || null);
+            setCompanyName(parsedInfo.CompanyName || null);
         }
     } catch (error) {
         console.error('Failed to parse caregiver info from localStorage', error);

@@ -234,7 +234,7 @@ export function CaregiverView({ onShiftComplete, caregiverName, companyName }: C
           </div>
            <CardDescription>
             {isShiftActive && shiftStartTime ? `Shift for ${activeShiftClient?.name} started at ${format(shiftStartTime, 'p')}` : 
-            `Welcome, ${caregiverName || 'Caregiver'}! from ${companyName || 'your company'}. Select a client, date, and time to start a new shift.`}
+            `Welcome, ${caregiverName || 'Caregiver'}! from ${companyName || 'your company'}. Select a client, date, and time to enter shift data.`}
            </CardDescription>
         </CardHeader>
         <CardContent>

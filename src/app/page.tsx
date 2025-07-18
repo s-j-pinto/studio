@@ -115,7 +115,7 @@ export default function LoginPage() {
           <CardHeader>
             <CardTitle className="text-2xl">Caregiver Login</CardTitle>
             <CardDescription>
-              Login using your Teletrack from Spectrum account.
+              Login using your Teletrack Spectrum account.
             </CardDescription>
           </CardHeader>
           <CardContent>
