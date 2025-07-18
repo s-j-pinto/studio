@@ -63,7 +63,7 @@ export default function LoginPage() {
     console.log('apiPayload', apiPayload);
 
     try {
-      const response = await fetch('https://gps.spectrumvoice.com/api/caregiver/login', {
+      const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiPayload),

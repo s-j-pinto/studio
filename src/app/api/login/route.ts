@@ -11,8 +11,7 @@ export async function POST(request: Request) {
 
     const apiPayload = {
       email,
-      password: pin, 
-      companyId: 'test-company', 
+      pin: pin,  
     };
 
     const apiResponse = await fetch('https://gps.spectrumvoice.com/api/caregiver/login', {
