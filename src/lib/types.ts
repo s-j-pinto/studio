@@ -7,12 +7,15 @@ export interface Task {
   completed: boolean;
 }
 
+// A version of the Task type that is safe to pass to server actions.
+export type PlainTask = Omit<Task, 'icon'>;
+
 export interface CompletedShift {
   id: string;
   client: { id: string; name: string };
   startTime: string;
   endTime: string;
-  completedTasks: Task[];
-  incompleteTasks: Task[];
+  completedTasks: PlainTask[];
+  incompleteTasks: PlainTask[];
   notes: string;
 }
