@@ -57,7 +57,7 @@ const clients = [
 ];
 
 interface CaregiverViewProps {
-  onShiftComplete: (shift: CompletedShift) => void;
+  onShiftComplete: (shift: Omit<CompletedShift, 'id'>) => void;
   caregiverName: string | null;
   companyName: string | null;
 }
@@ -120,8 +120,7 @@ export function CaregiverView({ onShiftComplete, caregiverName, companyName }: C
     setIsShiftActive(false);
 
     if (shiftStartTime && activeShiftClient) {
-        const newShift: CompletedShift = {
-            id: new Date().toISOString(),
+        const newShift: Omit<CompletedShift, 'id'> = {
             client: activeShiftClient,
             startTime: shiftStartTime.toISOString(),
             endTime: endTime.toISOString(),

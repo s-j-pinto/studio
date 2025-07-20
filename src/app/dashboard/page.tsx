@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { HandHeart, LogOut } from 'lucide-react';
 import { CaregiverView } from '@/components/CaregiverView';
 import { ManagerView } from '@/components/ManagerView';
@@ -16,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import type { CompletedShift } from '@/lib/types';
+import { addShift, getShifts, updateShiftNotes as updateShiftNotesAction } from '@/lib/actions';
 
 export default function DashboardPage() {
   const [completedShifts, setCompletedShifts] = useState<CompletedShift[]>([]);
@@ -43,39 +43,32 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  useEffect(() => {
-    if (isClient) {
-      try {
-        const storedShifts = localStorage.getItem('completedShifts');
-        if (storedShifts) {
-          setCompletedShifts(JSON.parse(storedShifts));
-        }
-      } catch (error) {
-        console.error('Failed to parse shifts from localStorage', error);
-      }
-    }
-  }, [isClient]);
-
-  useEffect(() => {
-    if(isClient) {
-      localStorage.setItem('completedShifts', JSON.stringify(completedShifts));
-    }
-  }, [completedShifts, isClient]);
-
-  const addCompletedShift = (shift: CompletedShift) => {
-    setCompletedShifts(prev => [...prev, shift]);
+  const fetchShifts = async () => {
+    const shifts = await getShifts();
+    setCompletedShifts(shifts);
   };
 
-  const updateShiftNotes = (shiftId: string, notes: string) => {
-    setCompletedShifts(prev =>
-      prev.map(s => (s.id === shiftId ? { ...s, notes } : s))
-    );
+  useEffect(() => {
+    if (isClient) {
+      fetchShifts();
+    }
+  }, [isClient]);
+  
+
+  const addCompletedShift = async (shift: Omit<CompletedShift, 'id'>) => {
+    await addShift(shift);
+    await fetchShifts();
+  };
+
+  const updateShiftNotes = async (shiftId: string, notes: string) => {
+    await updateShiftNotesAction(shiftId, notes);
+    await fetchShifts();
   };
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('caregiverInfo');
-    localStorage.removeItem('completedShifts');
+    // We don't remove completedShifts from localStorage anymore as it's not the source of truth
     router.replace('/');
   };
 
