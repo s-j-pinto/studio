@@ -2,6 +2,8 @@
 'use client';
 
 import { useState } from 'react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import {
   Accessibility,
   Check,
@@ -11,6 +13,7 @@ import {
   Sparkles,
   Users,
   UtensilsCrossed,
+  FileDown,
 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, isWithinInterval, isEqual, startOfDay, subWeeks } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -20,6 +23,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import type { Task, CompletedShift } from '@/lib/types';
@@ -124,6 +128,62 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
       .map(t => new Date(t))
       .sort((a,b) => a.getTime() - b.getTime());
 
+  const handleExportPDF = () => {
+    if (!selectedClientId || clientShifts.length === 0) return;
+
+    const client = clients.find(c => c.id === selectedClientId);
+    if (!client) return;
+
+    const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(18);
+    doc.text(`Weekly Shift Report for ${client.name}`, 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Week: ${selectedWeek.label}`, 14, 30);
+
+    // Prepare table data
+    const tableHead = [['Task', ...weekDates.map(d => format(d, 'eee, dd'))]];
+    const tableBody = initialTasks.map(task => {
+        const row = [task.text];
+        weekDates.forEach(date => {
+            const shiftOnDate = clientShifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
+            const isCompleted = shiftOnDate ? shiftOnDate.completedTasks.some(ct => ct.id === task.id) : false;
+            row.push(isCompleted ? 'Yes' : '');
+        });
+        return row;
+    });
+
+    // Add table to PDF
+    (doc as any).autoTable({
+        startY: 35,
+        head: tableHead,
+        body: tableBody,
+        theme: 'striped',
+        headStyles: { fillColor: [38, 43, 61] }
+    });
+    
+    // Add notes section
+    let finalY = (doc as any).lastAutoTable.finalY || 40;
+    doc.setFontSize(14);
+    doc.text('Shift Notes', 14, finalY + 15);
+    
+    clientShifts.forEach(shift => {
+        if (shift.notes) {
+            finalY = (doc as any).lastAutoTable.finalY + 25;
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${format(new Date(shift.startTime), 'eeee, PPP')}:`, 15, finalY);
+            doc.setFont('helvetica', 'normal');
+            const splitNotes = doc.splitTextToSize(shift.notes, 180);
+            doc.text(splitNotes, 15, finalY + 7);
+        }
+    });
+
+    // Save the PDF
+    doc.save(`Shift-Report-${client.name.replace(' ', '_')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto grid gap-8">
@@ -245,12 +305,18 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
                       </TooltipProvider>
                     </div>
                   ) : (
-                    <p className="text-muted-foreground text-center">No shifts recorded for this client this week.</p>
+                    <p className="text-muted-foreground text-center py-8">No shifts recorded for this client this week.</p>
                   )
                 ) : (
-                    <p className="text-muted-foreground text-center">Please select a client to see their weekly shift history.</p>
+                    <p className="text-muted-foreground text-center py-8">Please select a client to see their weekly shift history.</p>
                 )}
             </CardContent>
+            <CardFooter>
+                <Button onClick={handleExportPDF} disabled={!selectedClientId || clientShifts.length === 0}>
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Export PDF Report
+                </Button>
+            </CardFooter>
         </Card>
 
       <Dialog open={!!editingShift} onOpenChange={(isOpen) => !isOpen && setEditingShift(null)}>
