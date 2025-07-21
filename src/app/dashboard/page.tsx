@@ -39,6 +39,7 @@ export default function DashboardPage() {
   const [isClient, setIsClient] = useState(false);
   const [caregiverName, setCaregiverName] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState<string | null>(null);
+  const [isManager, setIsManager] = useState(false);
   const router = useRouter();
   
   useEffect(() => {
@@ -54,6 +55,10 @@ export default function DashboardPage() {
             const parsedInfo = JSON.parse(caregiverInfo);
             setCaregiverName(parsedInfo.MyName || null);
             setCompanyName(parsedInfo.CompanyName || null);
+            const employeeId = parsedInfo.EmployeeID?.toString();
+            if (employeeId === "66966.0" || employeeId === "132192.0") {
+                setIsManager(true);
+            }
         }
     } catch (error) {
         console.error('Failed to parse caregiver info from localStorage', error);
@@ -85,12 +90,10 @@ export default function DashboardPage() {
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('caregiverInfo');
-    // We don't remove completedShifts from localStorage anymore as it's not the source of truth
     router.replace('/');
   };
 
   if (!isClient) {
-    // Render nothing or a loading spinner on the server to avoid flash of unauthenticated content
     return null;
   }
 
@@ -124,16 +127,18 @@ export default function DashboardPage() {
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
           <Tabs defaultValue="caregiver" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+            <TabsList className={`grid w-full ${isManager ? 'grid-cols-2 md:w-[400px]' : 'grid-cols-1 md:w-[200px]'}`}>
               <TabsTrigger value="caregiver">Caregiver View</TabsTrigger>
-              <TabsTrigger value="manager">Manager View</TabsTrigger>
+              {isManager && <TabsTrigger value="manager">Manager View</TabsTrigger>}
             </TabsList>
             <TabsContent value="caregiver">
               <CaregiverView caregiverName={caregiverName} companyName={companyName} onShiftComplete={addCompletedShift} />
             </TabsContent>
-            <TabsContent value="manager">
-              <ManagerView completedShifts={completedShifts} onUpdateNotes={updateShiftNotes} />
-            </TabsContent>
+            {isManager && (
+                <TabsContent value="manager">
+                    <ManagerView completedShifts={completedShifts} onUpdateNotes={updateShiftNotes} />
+                </TabsContent>
+            )}
           </Tabs>
         </main>
       </div>
