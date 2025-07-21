@@ -12,7 +12,7 @@ import {
   Users,
   UtensilsCrossed,
 } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, isWithinInterval, isEqual, startOfDay } from 'date-fns';
+import { format, startOfWeek, endOfWeek, isWithinInterval, isEqual, startOfDay, subWeeks } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -74,10 +74,27 @@ interface ManagerViewProps {
   onUpdateNotes: (shiftId: string, notes: string) => void;
 }
 
+const generatePastWeeks = (count: number) => {
+    const today = new Date();
+    const weeks = [];
+    for (let i = 0; i < count; i++) {
+        const weekStart = startOfWeek(subWeeks(today, i), { weekStartsOn: 1 });
+        const weekEnd = endOfWeek(subWeeks(today, i), { weekStartsOn: 1 });
+        weeks.push({
+            start: weekStart,
+            end: weekEnd,
+            label: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`
+        });
+    }
+    return weeks;
+}
+
 export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps) {
   const [editingShift, setEditingShift] = useState<CompletedShift | null>(null);
   const [editedNotes, setEditedNotes] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const pastWeeks = generatePastWeeks(12);
+  const [selectedWeek, setSelectedWeek] = useState(pastWeeks[0]);
 
   const handleOpenEditDialog = (shift: CompletedShift) => {
     setEditingShift(shift);
@@ -94,14 +111,10 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
   const getWeeklyShiftsForClient = () => {
     if (!selectedClientId) return [];
     
-    const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-    const weekEnd = endOfWeek(today, { weekStartsOn: 1 }); // Sunday
-
     return completedShifts
         .filter(shift => 
             shift.client.id === selectedClientId &&
-            isWithinInterval(new Date(shift.startTime), { start: weekStart, end: weekEnd })
+            isWithinInterval(new Date(shift.startTime), { start: selectedWeek.start, end: selectedWeek.end })
         )
         .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   };
@@ -118,24 +131,47 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
             <CardHeader>
               <div>
                 <CardTitle>Weekly Shift History</CardTitle>
-                <CardDescription>Select a client to view their shift summary for the week.</CardDescription>
+                <CardDescription>Select a client and week to view their shift summary.</CardDescription>
               </div>
             </CardHeader>
             <CardContent className="space-y-8">
-                <div className="grid gap-2 max-w-sm">
-                    <Label htmlFor="client-select">Client</Label>
-                    <Select onValueChange={setSelectedClientId} value={selectedClientId ?? undefined}>
-                      <SelectTrigger id="client-select">
-                        <SelectValue placeholder="Select a client" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clients.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                      <Label htmlFor="client-select">Client</Label>
+                      <Select onValueChange={setSelectedClientId} value={selectedClientId ?? undefined}>
+                        <SelectTrigger id="client-select">
+                          <SelectValue placeholder="Select a client" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {clients.map((client) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                  </div>
+                   <div className="grid gap-2">
+                      <Label htmlFor="week-select">Week</Label>
+                      <Select 
+                        value={selectedWeek.label}
+                        onValueChange={(value) => {
+                            const week = pastWeeks.find(w => w.label === value);
+                            if (week) setSelectedWeek(week);
+                        }}
+                      >
+                        <SelectTrigger id="week-select">
+                          <SelectValue placeholder="Select a week" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {pastWeeks.map((week) => (
+                            <SelectItem key={week.label} value={week.label}>
+                              {week.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                  </div>
                 </div>
                 
                 {selectedClientId ? (
