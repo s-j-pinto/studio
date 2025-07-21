@@ -57,7 +57,7 @@ export default function DashboardPage() {
             setCompanyName(parsedInfo.CompanyName || null);
             const employeeId = parsedInfo.EmployeeID?.toString();
             console.log(employeeId);
-            if (employeeId === "66966.0" || employeeId === "132192.0") {
+            if (employeeId === "66966" || employeeId === "132192") {
                 setIsManager(true);
             }
         }
