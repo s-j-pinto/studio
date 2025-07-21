@@ -183,7 +183,7 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
                                   <TableRow>
                                       <TableHead className="w-[200px]">Task</TableHead>
                                       {weekDates.map(date => (
-                                          <TableHead key={date.toISOString()} className="text-center">
+                                          <TableHead key={format(date, 'yyyy-MM-dd')} className="text-center">
                                               {format(date, 'eee, dd')}
                                           </TableHead>
                                       ))}
@@ -196,11 +196,11 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
                                           {weekDates.map(date => {
                                               const shiftOnDate = clientShifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
                                               if (!shiftOnDate) {
-                                                return <TableCell key={date.toISOString()} className="text-center"></TableCell>;
+                                                return <TableCell key={format(date, 'yyyy-MM-dd')} className="text-center"></TableCell>;
                                               }
                                               const isCompleted = shiftOnDate.completedTasks.some(ct => ct.id === task.id);
                                               return (
-                                                  <TableCell key={date.toISOString()} className="text-center">
+                                                  <TableCell key={format(date, 'yyyy-MM-dd')} className="text-center">
                                                       {isCompleted && <Check className="h-5 w-5 mx-auto text-green-500" />}
                                                   </TableCell>
                                               )
@@ -212,7 +212,7 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
                                       {weekDates.map(date => {
                                           const shiftOnDate = clientShifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
                                           return (
-                                              <TableCell key={date.toISOString()} className="text-center text-xs text-muted-foreground">
+                                              <TableCell key={format(date, 'yyyy-MM-dd')} className="text-center text-xs text-muted-foreground">
                                                   {shiftOnDate ? format(new Date(shiftOnDate.startTime), 'p') : '-'}
                                               </TableCell>
                                           )
@@ -223,7 +223,7 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
                                        {weekDates.map(date => {
                                           const shiftOnDate = clientShifts.find(s => isEqual(startOfDay(new Date(s.startTime)), date));
                                           return (
-                                              <TableCell key={date.toISOString()} className="text-center">
+                                              <TableCell key={format(date, 'yyyy-MM-dd')} className="text-center">
                                                   {shiftOnDate ? (
                                                       <Tooltip>
                                                           <TooltipTrigger asChild>
