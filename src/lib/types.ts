@@ -13,9 +13,12 @@ export type PlainTask = Omit<Task, 'icon'>;
 export interface CompletedShift {
   id: string;
   client: { id: string; name: string };
+  caregiverName: string;
   startTime: string;
   endTime: string;
   completedTasks: PlainTask[];
   incompleteTasks: PlainTask[];
   notes: string;
 }
+
+    

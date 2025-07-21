@@ -119,12 +119,13 @@ export function CaregiverView({ onShiftComplete, caregiverName, companyName }: C
     setShiftEndTime(endTime);
     setIsShiftActive(false);
 
-    if (shiftStartTime && activeShiftClient) {
+    if (shiftStartTime && activeShiftClient && caregiverName) {
         // Create a serializable version of the tasks by removing the icon component.
         const plainTasks = tasks.map(({ icon, ...rest }) => rest);
 
         const newShift: Omit<CompletedShift, 'id'> = {
             client: activeShiftClient,
+            caregiverName,
             startTime: shiftStartTime.toISOString(),
             endTime: endTime.toISOString(),
             completedTasks: plainTasks.filter(t => t.completed),
@@ -342,3 +343,5 @@ export function CaregiverView({ onShiftComplete, caregiverName, companyName }: C
     </div>
   );
 }
+
+    

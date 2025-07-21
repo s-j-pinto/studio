@@ -10,6 +10,7 @@ function docToShift(doc: DocumentData): CompletedShift {
     return {
         id: doc.id,
         client: data.client,
+        caregiverName: data.caregiverName,
         startTime: data.startTime,
         endTime: data.endTime,
         completedTasks: data.completedTasks,
@@ -50,3 +51,5 @@ export async function updateShiftNotes(shiftId: string, notes: string) {
         throw new Error("Could not update notes.");
     }
 }
+
+    
