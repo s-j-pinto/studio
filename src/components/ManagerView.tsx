@@ -207,27 +207,11 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
             <CardHeader>
               <div>
                 <CardTitle>Weekly Shift History</CardTitle>
-                <CardDescription>Select a client, caregiver, and week to view shift summary.</CardDescription>
+                <CardDescription>Select a caregiver, client, and week to view shift summary.</CardDescription>
               </div>
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="grid gap-2">
-                      <Label htmlFor="client-select">Client</Label>
-                      <Select onValueChange={setSelectedClientId} value={selectedClientId ?? undefined}>
-                        <SelectTrigger id="client-select">
-                          <SelectValue placeholder="All Clients" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Clients</SelectItem>
-                          {clients.map((client) => (
-                            <SelectItem key={client.id} value={client.id}>
-                              {client.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                  </div>
                   <div className="grid gap-2">
                       <Label htmlFor="caregiver-select">Caregiver</Label>
                       <Select onValueChange={setSelectedCaregiverName} value={selectedCaregiverName ?? undefined}>
@@ -239,6 +223,22 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
                           {caregivers.map((name) => (
                             <SelectItem key={name} value={name}>
                               {name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                  </div>
+                  <div className="grid gap-2">
+                      <Label htmlFor="client-select">Client</Label>
+                      <Select onValueChange={setSelectedClientId} value={selectedClientId ?? undefined}>
+                        <SelectTrigger id="client-select">
+                          <SelectValue placeholder="All Clients" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Clients</SelectItem>
+                          {clients.map((client) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -373,5 +373,7 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
     </div>
   );
 }
+
+    
 
     
