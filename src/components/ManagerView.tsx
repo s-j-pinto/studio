@@ -12,7 +12,7 @@ import {
   Users,
   UtensilsCrossed,
 } from 'lucide-react';
-import { format, startOfWeek, isWithinInterval, isEqual, startOfDay } from 'date-fns';
+import { format, startOfWeek, endOfWeek, isWithinInterval, isEqual, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -96,8 +96,7 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
     
     const today = new Date();
     const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
+    const weekEnd = endOfWeek(today, { weekStartsOn: 1 }); // Sunday
 
     return completedShifts
         .filter(shift => 
