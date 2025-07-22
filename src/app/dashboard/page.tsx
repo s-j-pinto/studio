@@ -47,6 +47,11 @@ export default function DashboardPage() {
   const [onCallCaregivers, setOnCallCaregivers] = useState<OnCallCaregiver[]>([]);
   const router = useRouter();
   
+  const fetchShifts = async () => {
+    const shifts = await getShifts();
+    setCompletedShifts(shifts);
+  };
+
   useEffect(() => {
     setIsClient(true);
     const isAuthenticated = localStorage.getItem('isAuthenticated');
@@ -62,14 +67,13 @@ export default function DashboardPage() {
             setCompanyName(parsedInfo.CompanyName || null);
             setCustomerID(parsedInfo.CustomerID || null);
             setPassword(parsedInfo.Password || null);
-            console.log('CustomerID', parsedInfo.CustomerID)
-            console.log('Password', parsedInfo.Password)
+            
             const employeeId = parsedInfo.EmployeeID?.toString();
             
             const isManagerUser = employeeId === "66966" || employeeId === "132192";
             setIsManager(isManagerUser);
 
-            if (isManagerUser) {
+            if (isManagerUser && parsedInfo.CustomerID && parsedInfo.Password) {
                 fetchOnCallCaregivers(parsedInfo.CustomerID, parsedInfo.Password);
             }
         }
@@ -80,9 +84,6 @@ export default function DashboardPage() {
 
   const fetchOnCallCaregivers = async (customerID: string, password: string ) => {
     try {
-        console.log('inside fetch on call caregivers')
-        console.log('customerID', customerID)
-        console.log('password', password)
         const response = await fetch(`/api/caregivers?CustomerID=${customerID}&Pin=${password}`);
         if(!response.ok) {
             const errorData = await response.json();
@@ -95,10 +96,6 @@ export default function DashboardPage() {
     }
   };
 
-  const fetchShifts = async () => {
-    const shifts = await getShifts();
-    setCompletedShifts(shifts);
-  };
 
   useEffect(() => {
     if (isClient) {
@@ -170,6 +167,7 @@ export default function DashboardPage() {
                         completedShifts={completedShifts} 
                         onUpdateNotes={updateShiftNotes}
                         onCallCaregivers={onCallCaregivers}
+                        onShiftsCleared={fetchShifts}
                     />
                 </TabsContent>
             )}

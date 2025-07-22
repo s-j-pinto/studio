@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, updateDoc, doc, DocumentData } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, doc, DocumentData, writeBatch } from 'firebase/firestore';
 import type { CompletedShift } from './types';
 
 function docToShift(doc: DocumentData): CompletedShift {
@@ -52,4 +52,41 @@ export async function updateShiftNotes(shiftId: string, notes: string) {
     }
 }
 
-    
+export async function deleteAllShifts() {
+    try {
+        const shiftsCollection = collection(db, 'shifts');
+        const shiftsSnapshot = await getDocs(shiftsCollection);
+
+        if (shiftsSnapshot.empty) {
+            console.log("No shifts to delete.");
+            return { success: true, message: "No shifts found to delete." };
+        }
+
+        const batchSize = 500;
+        const batches = [];
+        let currentBatch = writeBatch(db);
+        let currentBatchSize = 0;
+
+        for (const docSnapshot of shiftsSnapshot.docs) {
+            currentBatch.delete(docSnapshot.ref);
+            currentBatchSize++;
+            if (currentBatchSize === batchSize) {
+                batches.push(currentBatch);
+                currentBatch = writeBatch(db);
+                currentBatchSize = 0;
+            }
+        }
+        if (currentBatchSize > 0) {
+            batches.push(currentBatch);
+        }
+
+        await Promise.all(batches.map(batch => batch.commit()));
+
+        console.log(`Successfully deleted ${shiftsSnapshot.size} shifts.`);
+        return { success: true, message: `Successfully deleted ${shiftsSnapshot.size} shifts.` };
+
+    } catch (error) {
+        console.error("Error deleting shifts:", error);
+        throw new Error("Could not delete shifts.");
+    }
+}

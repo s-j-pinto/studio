@@ -14,6 +14,8 @@ import {
   Users,
   UtensilsCrossed,
   FileDown,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, isWithinInterval, isEqual, startOfDay, subWeeks } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -42,6 +44,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -57,6 +70,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { deleteAllShifts } from '@/lib/actions';
+import { useToast } from "@/hooks/use-toast";
 
 const initialTasks: Omit<Task, 'completed'>[] = [
   { id: 1, text: 'Medication Reminder', icon: Pill },
@@ -77,6 +92,7 @@ interface ManagerViewProps {
   completedShifts: CompletedShift[];
   onUpdateNotes: (shiftId: string, notes: string) => void;
   onCallCaregivers: OnCallCaregiver[];
+  onShiftsCleared: () => void;
 }
 
 const generatePastWeeks = (count: number) => {
@@ -94,13 +110,15 @@ const generatePastWeeks = (count: number) => {
     return weeks;
 }
 
-export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers }: ManagerViewProps) {
+export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, onShiftsCleared }: ManagerViewProps) {
   const [editingShift, setEditingShift] = useState<CompletedShift | null>(null);
   const [editedNotes, setEditedNotes] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string>("all");
   const [selectedCaregiverId, setSelectedCaregiverId] = useState<string>("all");
   const pastWeeks = generatePastWeeks(12);
   const [selectedWeek, setSelectedWeek] = useState(pastWeeks[0]);
+  const [isClearing, setIsClearing] = useState(false);
+  const { toast } = useToast();
 
   const handleOpenEditDialog = (shift: CompletedShift) => {
     setEditingShift(shift);
@@ -121,21 +139,17 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers }
       filteredShifts = filteredShifts.filter(shift => shift.client.id === selectedClientId);
     }
     
-    // Note: The on-call caregivers list has CaregiverID (number), but login response might have EmployeeID (string).
-    // The CompletedShift saves caregiverName. We need a consistent ID to filter by.
-    // For now, let's assume we can filter by name, but this might need refinement
-    // if names are not unique or if we need to link to the ID.
-    // The request is to populate dropdown with FirstName, LastName, so let's use that.
-    const selectedCaregiver = onCallCaregivers.find(c => c.CaregiverID.toString() === selectedCaregiverId);
-    if (selectedCaregiver) {
-      const caregiverFullName = `${selectedCaregiver.FirstName},${selectedCaregiver.LastName}`;
-      // This assumes `caregiverName` in `CompletedShift` is stored as "FirstName,LastName"
-      filteredShifts = filteredShifts.filter(shift => shift.caregiverName === caregiverFullName);
+    if (selectedCaregiverId !== 'all') {
+        const selectedCaregiver = onCallCaregivers.find(c => c.CaregiverID.toString() === selectedCaregiverId);
+        if (selectedCaregiver) {
+          const caregiverFullName = `${selectedCaregiver.FirstName},${selectedCaregiver.LastName}`;
+          filteredShifts = filteredShifts.filter(shift => shift.caregiverName === caregiverFullName);
+        }
     }
 
     return filteredShifts
         .filter(shift => 
-            isWithinInterval(new Date(shift.startTime), { start: selectedWeek.start, end: selectedWeek.end })
+            isWithinInterval(new Date(shift.startTime), { start: startOfDay(selectedWeek.start), end: endOfWeek(selectedWeek.end) })
         )
         .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   };
@@ -200,7 +214,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers }
             doc.setFont('helvetica', 'normal');
             const splitNotes = doc.splitTextToSize(shift.notes, 180);
             doc.text(splitNotes, 15, finalY + 7);
-            finalY += splitNotes.length * 5; // Adjust Y for next note
+            finalY += splitNotes.length * 5 + 7; // Adjust Y for next note
         }
     });
 
@@ -208,14 +222,59 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers }
     doc.save(`Shift-Report-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
+  const handleClearAllData = async () => {
+    setIsClearing(true);
+    try {
+        await deleteAllShifts();
+        toast({
+            title: "Success",
+            description: "All shift data has been cleared.",
+        });
+        onShiftsCleared();
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to clear shift data.",
+        });
+    } finally {
+        setIsClearing(false);
+    }
+  }
+
   return (
     <div className="w-full max-w-4xl mx-auto grid gap-8">
         <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row justify-between items-start">
               <div>
                 <CardTitle>Weekly Shift History</CardTitle>
                 <CardDescription>Select a caregiver, client, and week to view shift summary.</CardDescription>
               </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Clear All Data
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>
+                        <AlertTriangle className="inline-block mr-2 text-destructive" /> Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete all
+                        shift data from the database.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleClearAllData} disabled={isClearing}>
+                        {isClearing ? "Clearing..." : "Yes, delete everything"}
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+             </AlertDialog>
             </CardHeader>
             <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
