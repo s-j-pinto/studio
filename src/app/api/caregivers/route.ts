@@ -13,6 +13,7 @@ export async function GET(request: Request) {
   }
 
   const externalApiUrl = `https://gps.spectrumvoice.com/api/caregiver/on-call?CustomerID=${customerID}&Pin=${password}`;
+  console.log('externalApiUrl', externalApiUrl);
 
   try {
     const apiResponse = await fetch(externalApiUrl, {
