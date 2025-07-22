@@ -140,11 +140,11 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
     }
     
     if (selectedCaregiverId !== 'all') {
-        const selectedCaregiver = Array.isArray(onCallCaregivers) ? onCallCaregivers.find(c => c.EmployeeID.toString() === selectedCaregiverId) : undefined;
-        if (selectedCaregiver) {
-          const caregiverFullName = `${selectedCaregiver.FirstName},${selectedCaregiver.LastName}`;
-          filteredShifts = filteredShifts.filter(shift => shift.caregiverName === caregiverFullName);
-        }
+      const selectedCaregiver = Array.isArray(onCallCaregivers) ? onCallCaregivers.find(c => c.EmployeeID.toString() === selectedCaregiverId) : undefined;
+      if (selectedCaregiver) {
+        const caregiverFullName = `${selectedCaregiver.FirstName},${selectedCaregiver.LastName}`;
+        filteredShifts = filteredShifts.filter(shift => shift.caregiverName === caregiverFullName);
+      }
     }
 
     return filteredShifts
