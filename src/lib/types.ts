@@ -22,7 +22,7 @@ export interface CompletedShift {
 }
 
 export interface OnCallCaregiver {
-  CaregiverID: number;
+  EmployeeID: number;
   FirstName: string;
   LastName: string;
   PhoneNumber: string;
