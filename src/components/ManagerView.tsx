@@ -300,6 +300,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
                         <SelectTrigger id="client-select">
                           <SelectValue placeholder="All Clients" />
                         </SelectTrigger>
+                        console.log('onCallCaregivers dropdown:', onCallCaregivers);
                         <SelectContent>
                           <SelectItem value="all">All Clients</SelectItem>
                           {clients.map((client) => (
