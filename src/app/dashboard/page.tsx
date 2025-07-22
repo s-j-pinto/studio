@@ -58,7 +58,7 @@ export default function DashboardPage() {
             setCompanyName(parsedInfo.CompanyName || null);
             const employeeId = parsedInfo.EmployeeID?.toString();
             
-            const isManagerUser = employeeId === "66966.0" || employeeId === "132192.0";
+            const isManagerUser = employeeId === "66966" || employeeId === "132192";
             setIsManager(isManagerUser);
 
             if (isManagerUser) {
@@ -72,7 +72,7 @@ export default function DashboardPage() {
 
   const fetchOnCallCaregivers = async (customerID: string, password: string ) => {
     try {
-        const response = await fetch(`/api/caregivers?CustomerID=${customerID}&Password=${password}`);
+        const response = await fetch(`/api/caregivers?CustomerID=${customerID}&Pin=${password}`);
         if(!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Failed to fetch caregivers');
