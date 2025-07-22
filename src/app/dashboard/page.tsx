@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/tooltip"
 import type { CompletedShift, OnCallCaregiver } from '@/lib/types';
 import { addShift, getShifts, updateShiftNotes as updateShiftNotesAction } from '@/lib/actions';
+import { set } from 'date-fns';
 
 const Logo = () => (
     <svg width="150" height="40" viewBox="0 0 250 60" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -39,6 +40,9 @@ export default function DashboardPage() {
   const [isClient, setIsClient] = useState(false);
   const [caregiverName, setCaregiverName] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState<string | null>(null);
+  const [customerID, setCustomerID] = useState<string | null>(null);
+  const [password, setPassword] = useState<string | null>(null);
+
   const [isManager, setIsManager] = useState(false);
   const [onCallCaregivers, setOnCallCaregivers] = useState<OnCallCaregiver[]>([]);
   const router = useRouter();
@@ -56,6 +60,9 @@ export default function DashboardPage() {
             const parsedInfo = JSON.parse(caregiverInfo);
             setCaregiverName(parsedInfo.MyName || null);
             setCompanyName(parsedInfo.CompanyName || null);
+            setCustomerID(parsedInfo.CustomerID || null);
+            setPassword(parsedInfo.Password || null);
+
             const employeeId = parsedInfo.EmployeeID?.toString();
             
             const isManagerUser = employeeId === "66966" || employeeId === "132192";
