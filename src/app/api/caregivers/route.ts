@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         'Accept': 'application/json',
       },
     });
-    console.log('apiResponse', apiResponse);
+    console.log('apiResponse', apiResponse.json);
 
     if (!apiResponse.ok) {
         const errorText = await apiResponse.text();
