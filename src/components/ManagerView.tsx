@@ -140,7 +140,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
     }
     
     if (selectedCaregiverId !== 'all') {
-        const selectedCaregiver = onCallCaregivers.find(c => c.CaregiverID.toString() === selectedCaregiverId);
+        const selectedCaregiver = Array.isArray(onCallCaregivers) ? onCallCaregivers.find(c => c.CaregiverID.toString() === selectedCaregiverId) : undefined;
         if (selectedCaregiver) {
           const caregiverFullName = `${selectedCaregiver.FirstName},${selectedCaregiver.LastName}`;
           filteredShifts = filteredShifts.filter(shift => shift.caregiverName === caregiverFullName);
@@ -163,7 +163,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
     if (clientShifts.length === 0) return;
 
     const client = selectedClientId !== 'all' ? clients.find(c => c.id === selectedClientId) : null;
-    const caregiver = selectedCaregiverId !== 'all' ? onCallCaregivers.find(c => c.CaregiverID.toString() === selectedCaregiverId) : null;
+    const caregiver = (selectedCaregiverId !== 'all' && Array.isArray(onCallCaregivers)) ? onCallCaregivers.find(c => c.CaregiverID.toString() === selectedCaregiverId) : null;
 
     const doc = new jsPDF();
     
@@ -286,7 +286,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Caregivers</SelectItem>
-                          {onCallCaregivers.map((c) => (
+                          {Array.isArray(onCallCaregivers) && onCallCaregivers.map((c) => (
                             <SelectItem key={c.CaregiverID} value={c.CaregiverID.toString()}>
                               {c.FirstName}, {c.LastName}
                             </SelectItem>
