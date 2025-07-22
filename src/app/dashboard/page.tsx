@@ -80,6 +80,9 @@ export default function DashboardPage() {
 
   const fetchOnCallCaregivers = async (customerID: string, password: string ) => {
     try {
+        console.log('inside fetch on call caregivers')
+        console.log('customerID', customerID)
+        console.log('password', password)
         const response = await fetch(`/api/caregivers?CustomerID=${customerID}&Pin=${password}`);
         if(!response.ok) {
             const errorData = await response.json();
