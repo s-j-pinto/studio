@@ -70,7 +70,7 @@ export default function DashboardPage() {
             
             const employeeId = parsedInfo.EmployeeID?.toString();
             
-            const isManagerUser = employeeId === "66966.0" || employeeId === "132192.0";
+            const isManagerUser = employeeId === "66966" || employeeId === "132192";
             setIsManager(isManagerUser);
 
             if (isManagerUser && parsedInfo.CustomerID && parsedInfo.Password) {

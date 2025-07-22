@@ -5,6 +5,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const customerID = searchParams.get('CustomerID');
   const password = searchParams.get('Pin');
+  console.log('<<In route>> customerID', customerID);
+  console.log('password', password);
 
   if (!customerID || !password) {
     return NextResponse.json({ message: 'CustomerID and Pin are required' }, { status: 400 });
