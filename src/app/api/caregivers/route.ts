@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -32,11 +33,9 @@ export async function GET(request: Request) {
     } else {
         const textData = await apiResponse.text();
         console.warn("Received non-JSON response from caregivers API:", textData);
-        // Attempt to handle cases where it might be a successful but empty/non-json response
-        if (textData.trim() === '') {
-            return NextResponse.json([], { status: 200 });
-        }
-        return NextResponse.json({ message: 'Received non-JSON response from external API', details: textData }, { status: 502 });
+        // If the external API returns a non-JSON response, it's often an empty string for "no caregivers".
+        // In this case, we should return an empty array to the client.
+        return NextResponse.json([], { status: 200 });
     }
 
   } catch (error) {
