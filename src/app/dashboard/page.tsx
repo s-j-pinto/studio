@@ -62,7 +62,8 @@ export default function DashboardPage() {
             setCompanyName(parsedInfo.CompanyName || null);
             setCustomerID(parsedInfo.CustomerID || null);
             setPassword(parsedInfo.Password || null);
-
+            console.log('CustomerID', parsedInfo.CustomerID)
+            console.log('Password', parsedInfo.Password)
             const employeeId = parsedInfo.EmployeeID?.toString();
             
             const isManagerUser = employeeId === "66966" || employeeId === "132192";
