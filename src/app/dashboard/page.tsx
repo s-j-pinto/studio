@@ -14,7 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import type { CompletedShift } from '@/lib/types';
+import type { CompletedShift, OnCallCaregiver } from '@/lib/types';
 import { addShift, getShifts, updateShiftNotes as updateShiftNotesAction } from '@/lib/actions';
 
 const Logo = () => (
@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [caregiverName, setCaregiverName] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState<string | null>(null);
   const [isManager, setIsManager] = useState(false);
+  const [onCallCaregivers, setOnCallCaregivers] = useState<OnCallCaregiver[]>([]);
   const router = useRouter();
   
   useEffect(() => {
@@ -56,15 +57,32 @@ export default function DashboardPage() {
             setCaregiverName(parsedInfo.MyName || null);
             setCompanyName(parsedInfo.CompanyName || null);
             const employeeId = parsedInfo.EmployeeID?.toString();
-            console.log(employeeId);
-            if (employeeId === "66966" || employeeId === "132192") {
-                setIsManager(true);
+            
+            const isManagerUser = employeeId === "66966.0" || employeeId === "132192.0";
+            setIsManager(isManagerUser);
+
+            if (isManagerUser) {
+                fetchOnCallCaregivers(parsedInfo.CustomerID, parsedInfo.Password);
             }
         }
     } catch (error) {
         console.error('Failed to parse caregiver info from localStorage', error);
     }
   }, [router]);
+
+  const fetchOnCallCaregivers = async (customerID: string, password: string ) => {
+    try {
+        const response = await fetch(`/api/caregivers?CustomerID=${customerID}&Password=${password}`);
+        if(!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to fetch caregivers');
+        }
+        const data: OnCallCaregiver[] = await response.json();
+        setOnCallCaregivers(data);
+    } catch (error) {
+        console.error('Error fetching on-call caregivers:', error);
+    }
+  };
 
   const fetchShifts = async () => {
     const shifts = await getShifts();
@@ -137,7 +155,11 @@ export default function DashboardPage() {
             </TabsContent>
             {isManager && (
                 <TabsContent value="manager">
-                    <ManagerView completedShifts={completedShifts} onUpdateNotes={updateShiftNotes} />
+                    <ManagerView 
+                        completedShifts={completedShifts} 
+                        onUpdateNotes={updateShiftNotes}
+                        onCallCaregivers={onCallCaregivers}
+                    />
                 </TabsContent>
             )}
           </Tabs>

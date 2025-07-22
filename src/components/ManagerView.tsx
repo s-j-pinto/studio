@@ -26,7 +26,7 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import type { Task, CompletedShift } from '@/lib/types';
+import type { Task, CompletedShift, OnCallCaregiver } from '@/lib/types';
 import {
   Table,
   TableBody,
@@ -76,6 +76,7 @@ const clients = [
 interface ManagerViewProps {
   completedShifts: CompletedShift[];
   onUpdateNotes: (shiftId: string, notes: string) => void;
+  onCallCaregivers: OnCallCaregiver[];
 }
 
 const generatePastWeeks = (count: number) => {
@@ -93,11 +94,11 @@ const generatePastWeeks = (count: number) => {
     return weeks;
 }
 
-export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps) {
+export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers }: ManagerViewProps) {
   const [editingShift, setEditingShift] = useState<CompletedShift | null>(null);
   const [editedNotes, setEditedNotes] = useState('');
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [selectedCaregiverName, setSelectedCaregiverName] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string>("all");
+  const [selectedCaregiverId, setSelectedCaregiverId] = useState<string>("all");
   const pastWeeks = generatePastWeeks(12);
   const [selectedWeek, setSelectedWeek] = useState(pastWeeks[0]);
 
@@ -112,18 +113,24 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
     setEditingShift(null);
     setEditedNotes('');
   };
-
-  const caregivers = Array.from(new Set(completedShifts.map(shift => shift.caregiverName).filter(Boolean)));
-
+  
   const getWeeklyShiftsForClient = () => {
     let filteredShifts = completedShifts;
 
-    if (selectedClientId) {
+    if (selectedClientId && selectedClientId !== 'all') {
       filteredShifts = filteredShifts.filter(shift => shift.client.id === selectedClientId);
     }
     
-    if (selectedCaregiverName) {
-      filteredShifts = filteredShifts.filter(shift => shift.caregiverName === selectedCaregiverName);
+    // Note: The on-call caregivers list has CaregiverID (number), but login response might have EmployeeID (string).
+    // The CompletedShift saves caregiverName. We need a consistent ID to filter by.
+    // For now, let's assume we can filter by name, but this might need refinement
+    // if names are not unique or if we need to link to the ID.
+    // The request is to populate dropdown with FirstName, LastName, so let's use that.
+    const selectedCaregiver = onCallCaregivers.find(c => c.CaregiverID.toString() === selectedCaregiverId);
+    if (selectedCaregiver) {
+      const caregiverFullName = `${selectedCaregiver.FirstName},${selectedCaregiver.LastName}`;
+      // This assumes `caregiverName` in `CompletedShift` is stored as "FirstName,LastName"
+      filteredShifts = filteredShifts.filter(shift => shift.caregiverName === caregiverFullName);
     }
 
     return filteredShifts
@@ -141,14 +148,14 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
   const handleExportPDF = () => {
     if (clientShifts.length === 0) return;
 
-    const client = selectedClientId ? clients.find(c => c.id === selectedClientId) : null;
-    const caregiver = selectedCaregiverName;
+    const client = selectedClientId !== 'all' ? clients.find(c => c.id === selectedClientId) : null;
+    const caregiver = selectedCaregiverId !== 'all' ? onCallCaregivers.find(c => c.CaregiverID.toString() === selectedCaregiverId) : null;
 
     const doc = new jsPDF();
     
     let reportTitle = 'Weekly Shift Report';
     if(client) reportTitle += ` for ${client.name}`;
-    if(caregiver) reportTitle += ` by ${caregiver}`;
+    if(caregiver) reportTitle += ` by ${caregiver.FirstName} ${caregiver.LastName}`;
 
 
     // Add title
@@ -214,15 +221,15 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="grid gap-2">
                       <Label htmlFor="caregiver-select">Caregiver</Label>
-                      <Select onValueChange={setSelectedCaregiverName} value={selectedCaregiverName ?? undefined}>
+                      <Select onValueChange={setSelectedCaregiverId} value={selectedCaregiverId}>
                         <SelectTrigger id="caregiver-select">
                           <SelectValue placeholder="All Caregivers" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Caregivers</SelectItem>
-                          {caregivers.map((name) => (
-                            <SelectItem key={name} value={name}>
-                              {name}
+                          {onCallCaregivers.map((c) => (
+                            <SelectItem key={c.CaregiverID} value={c.CaregiverID.toString()}>
+                              {c.FirstName}, {c.LastName}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -230,7 +237,7 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
                   </div>
                   <div className="grid gap-2">
                       <Label htmlFor="client-select">Client</Label>
-                      <Select onValueChange={setSelectedClientId} value={selectedClientId ?? undefined}>
+                      <Select onValueChange={setSelectedClientId} value={selectedClientId}>
                         <SelectTrigger id="client-select">
                           <SelectValue placeholder="All Clients" />
                         </SelectTrigger>
@@ -373,7 +380,3 @@ export function ManagerView({ completedShifts, onUpdateNotes }: ManagerViewProps
     </div>
   );
 }
-
-    
-
-    

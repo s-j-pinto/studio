@@ -21,4 +21,9 @@ export interface CompletedShift {
   notes: string;
 }
 
-    
+export interface OnCallCaregiver {
+  CaregiverID: number;
+  FirstName: string;
+  LastName: string;
+  PhoneNumber: string;
+}
