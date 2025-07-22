@@ -3,13 +3,13 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const customerID = searchParams.get('CustomerID');
-  const password = searchParams.get('Password');
+  const password = searchParams.get('Pin');
 
   if (!customerID || !password) {
-    return NextResponse.json({ message: 'CustomerID and Password are required' }, { status: 400 });
+    return NextResponse.json({ message: 'CustomerID and Pin are required' }, { status: 400 });
   }
 
-  const externalApiUrl = `https://gps.spectrumvoice.com/api/caregiver/on-call?CustomerID=${customerID}&Password=${password}`;
+  const externalApiUrl = `https://gps.spectrumvoice.com/api/caregiver/on-call?CustomerID=${customerID}&Pin=${password}`;
 
   try {
     const apiResponse = await fetch(externalApiUrl, {
