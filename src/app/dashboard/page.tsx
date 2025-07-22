@@ -84,7 +84,7 @@ export default function DashboardPage() {
 
   const fetchOnCallCaregivers = async (customerID: string, password: string ) => {
     try {
-        const response = await fetch(`/api/caregivers?CustomerID=${customerID}&Pin=${password}`);
+        const response = await fetch(`/api/caregivers?Customer=${customerID}&Pin=${password}`);
         if(!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Failed to fetch caregivers');
