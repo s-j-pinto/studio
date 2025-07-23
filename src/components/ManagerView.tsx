@@ -289,7 +289,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
                         <SelectItem value="all">All Caregivers</SelectItem>
                           {Array.isArray(onCallCaregivers) && onCallCaregivers.map((c) => (
                             <SelectItem key={c.EmployeeID} value={c.EmployeeID.toString()}>
-                              {c.FirstName} {c.LastName}
+                              {c.EmployeeID}
                             </SelectItem>
                           ))}
                         </SelectContent>
