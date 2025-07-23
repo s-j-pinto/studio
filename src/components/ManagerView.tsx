@@ -119,7 +119,8 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
   const [selectedWeek, setSelectedWeek] = useState(pastWeeks[0]);
   const [isClearing, setIsClearing] = useState(false);
   const { toast } = useToast();
-
+  console.log('onCallCaregivers data:', onCallCaregivers)
+  
   const handleOpenEditDialog = (shift: CompletedShift) => {
     setEditingShift(shift);
     setEditedNotes(shift.notes);
@@ -142,7 +143,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
     if (selectedCaregiverId !== 'all') {
         const selectedCaregiver = Array.isArray(onCallCaregivers) ? onCallCaregivers.find(c => c.EmployeeID.toString() === selectedCaregiverId) : undefined;
         if (selectedCaregiver) {
-          const caregiverFullName = `${selectedCaregiver.FirstName},${selectedCaregiver.LastName}`;
+          const caregiverFullName = `${selectedCaregiver.FirstName} ${selectedCaregiver.LastName}`;
           filteredShifts = filteredShifts.filter(shift => shift.caregiverName === caregiverFullName);
         }
       }
@@ -281,9 +282,10 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
                   <div className="grid gap-2">
                       <Label htmlFor="caregiver-select">Caregiver</Label>
                       <Select onValueChange={setSelectedCaregiverId} value={selectedCaregiverId}>
-                        
+                        <SelectTrigger id="caregiver-select">
+                          <SelectValue placeholder="All Caregivers" />
+                        </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Caregivers</SelectItem>
                           {Array.isArray(onCallCaregivers) && onCallCaregivers.map((c) => (
                             <SelectItem key={c.EmployeeID} value={c.EmployeeID.toString()}>
                               {c.FirstName} {c.LastName}
