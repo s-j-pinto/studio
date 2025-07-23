@@ -281,9 +281,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
                   <div className="grid gap-2">
                       <Label htmlFor="caregiver-select">Caregiver</Label>
                       <Select onValueChange={setSelectedCaregiverId} value={selectedCaregiverId}>
-                        <SelectTrigger id="caregiver-select">
-                          <SelectValue placeholder="All Caregivers" />
-                        </SelectTrigger>
+                        
                         <SelectContent>
                           <SelectItem value="all">All Caregivers</SelectItem>
                           {Array.isArray(onCallCaregivers) && onCallCaregivers.map((c) => (
