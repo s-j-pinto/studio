@@ -110,6 +110,41 @@ const generatePastWeeks = (count: number) => {
     return weeks;
 }
 
+function MyDropdownComponent() {
+  // Define the array of data for the dropdown
+  const optionsArray = [
+    { value: 'apple', label: 'Apple' },
+    { value: 'banana', label: 'Banana' },
+    { value: 'orange', label: 'Orange' },
+  ];
+
+  // State to manage the selected value
+  const [selectedValue, setSelectedValue] = useState('');
+
+  // Event handler for when the dropdown value changes
+  const handleChange = (event) => {
+    setSelectedValue(event.target.value);
+  };
+
+  return (
+    <div>
+      <label htmlFor="my-select">Choose a fruit:</label>
+      <select id="my-select" value={selectedValue} onChange={handleChange}>
+        <option value="">-- Select an option --</option> {/* Optional default option */}
+        {optionsArray.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {selectedValue && <p>You selected: {selectedValue}</p>}
+    </div>
+  );
+}
+export default MyDropdownComponent;
+
+
+
 export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, onShiftsCleared }: ManagerViewProps) {
   const [editingShift, setEditingShift] = useState<CompletedShift | null>(null);
   const [editedNotes, setEditedNotes] = useState('');
@@ -288,9 +323,8 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
                         <SelectContent>
                         <SelectItem value="all">All Caregivers</SelectItem>
                           {Array.isArray(onCallCaregivers) && onCallCaregivers.map((c) => (
-                            <SelectItem key='1' value='1'>
-                              'random1'
-                              'random 2'
+                            <SelectItem key={c.EmployeeID} value={c.EmployeeID.toString()}>
+                              {c.FirstName} {c.LastName}
                             </SelectItem>
                           ))}
                         </SelectContent>
