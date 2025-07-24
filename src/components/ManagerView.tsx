@@ -242,6 +242,22 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
         setIsClearing(false);
     }
   }
+  
+  
+  const items = [
+    { id: 1, name: 'Apple' },
+    { id: 2, name: 'Banana' },
+    { id: 3, name: 'Orange' },
+    { id: 4, name: 'Grape' },
+  ];
+  // State to manage the currently selected value in the dropdown
+  const [selectedValue, setSelectedValue] = useState('');
+
+  // Event handler for when the dropdown value changes
+  const handleChange = (event) => {
+    setSelectedValue(event.target.value);
+  };
+
 
   return (
     <div className="w-full max-w-4xl mx-auto grid gap-8">
@@ -295,6 +311,23 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
                         </SelectContent>
                       </Select>
                   </div>
+
+                  <div>
+                    <label htmlFor="my-select">Choose an item:</label>
+                    <select id="my-select" value={selectedValue} onChange={handleChange}>
+                      {/* Default option */}
+                      <option value="">-- Select an item --</option>
+
+                      {/* Dynamically populate options from the 'items' array */}
+                      {items.map((item) => (
+                        <option key={item.id} value={item.name}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedValue && <p>You selected: {selectedValue}</p>}
+                  </div>
+
                   <div className="grid gap-2">
                       <Label htmlFor="client-select">Client</Label>
                       <Select onValueChange={setSelectedClientId} value={selectedClientId}>
