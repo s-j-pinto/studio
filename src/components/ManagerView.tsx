@@ -119,7 +119,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
   const [selectedWeek, setSelectedWeek] = useState(pastWeeks[0]);
   const [isClearing, setIsClearing] = useState(false);
   const { toast } = useToast();
-  console.log('onCallCaregivers data:', onCallCaregivers)
+  
   
   const handleOpenEditDialog = (shift: CompletedShift) => {
     setEditingShift(shift);
@@ -257,7 +257,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
   const handleChange = (event) => {
     setSelectedValue(event.target.value);
   };
-
+  console.log('onCallCaregivers data just above:', onCallCaregivers.flatMap(c => c.EmployeeID))
 
   return (
     <div className="w-full max-w-4xl mx-auto grid gap-8">
@@ -300,7 +300,7 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
                       <Select onValueChange={setSelectedCaregiverId} value={selectedCaregiverId}>
                       
                         
-                          {onCallCaregivers.map((c) => (
+                          {Array.isArray(onCallCaregivers) && onCallCaregivers.map((c) => (
                             <option key={c.EmployeeID} value={c.EmployeeID.toString()}>
                               {c.FirstName} {c.LastName}
                             </option>
