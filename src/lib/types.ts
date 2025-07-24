@@ -27,3 +27,8 @@ export interface OnCallCaregiver {
   LastName: string;
   PhoneNumber: string;
 }
+export interface OnCallCaregiverAPIResponse {
+  EmployeeID: number;
+  FirstName: string;
+  LastName: string;
+}
