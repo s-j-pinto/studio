@@ -257,8 +257,8 @@ export function ManagerView({ completedShifts, onUpdateNotes, onCallCaregivers, 
   const handleChange = (event) => {
     setSelectedValue(event.target.value);
   };
-  console.log('onCallCaregivers data just above:', onCallCaregivers[0].EmployeeID)
-
+  console.log('onCallCaregivers data just above:', onCallCaregivers)
+  
   return (
     <div className="w-full max-w-4xl mx-auto grid gap-8">
         <Card>

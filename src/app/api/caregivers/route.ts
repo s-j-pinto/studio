@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         return NextResponse.json(data, { status: 200 });
     } else {
         const textData = await apiResponse.text();
-        console.warn("Received non-JSON response from caregivers API:", textData);
+        console.log("Received non-JSON response from caregivers API:", textData);
         // If the external API returns a non-JSON response, it's often an empty string for "no caregivers".
         // In this case, we should return an empty array to the client.
         return NextResponse.json([], { status: 200 });

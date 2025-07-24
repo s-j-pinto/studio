@@ -90,7 +90,7 @@ export default function DashboardPage() {
             throw new Error(errorData.message || 'Failed to fetch caregivers');
         }
         const data: OnCallCaregiver[] = await response.json();
-        console.log('data from calling caregivers listing:', data)
+        console.log('data from calling caregivers listing:', response.json())
         setOnCallCaregivers(data);
     } catch (error) {
         console.error('Error fetching on-call caregivers:', error);
