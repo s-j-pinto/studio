@@ -14,7 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import type { CompletedShift, OnCallCaregiver, OnCallCaregiverAPIResponse } from '@/lib/types';
+import type { CompletedShift, OnCallCaregiver, CaregiversAPIResponse } from '@/lib/types';
 import { addShift, getShifts, updateShiftNotes as updateShiftNotesAction } from '@/lib/actions';
 import { set } from 'date-fns';
 
@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const [password, setPassword] = useState<string | null>(null);
 
   const [isManager, setIsManager] = useState(false);
-  const [onCallCaregivers, setOnCallCaregivers] = useState<OnCallCaregiverAPIResponse[]>([]);
+  const [onCallCaregivers, setOnCallCaregivers] = useState<CaregiversAPIResponse[]>([]);
   const router = useRouter();
   
   const fetchShifts = async () => {
@@ -89,7 +89,7 @@ export default function DashboardPage() {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Failed to fetch caregivers');
         }
-        const data: OnCallCaregiverAPIResponse[] = await response.json() as OnCallCaregiverAPIResponse[];
+        const data: CaregiversAPIResponse[] = await response.json() as CaregiversAPIResponse[];
         console.log('data from calling caregivers listing:', data)
         setOnCallCaregivers(data);
     } catch (error) {
